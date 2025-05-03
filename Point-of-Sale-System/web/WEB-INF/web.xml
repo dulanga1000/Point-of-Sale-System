@@ -4,11 +4,11 @@
 	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	 xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_1.xsd"
 	 version="6.1">
-    
-         <display-name>Point-of-Sale-System</display-name>
-         
-        <!-- Set login.jsp as the welcome file -->
-        <welcome-file-list>
-            <welcome-file>Login/login.jsp</welcome-file>
-        </welcome-file-list>
+            <display-name>Point-of-Sale-System</display-name>
+            <!-- Set login.jsp as the welcome file -->
+            <welcome-file-list>
+                <welcome-file>Login/login.jsp</welcome-file>
+            </welcome-file-list>
+        
+
 </web-app>

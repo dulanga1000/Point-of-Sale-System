@@ -35,15 +35,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Cart Summary Display & Input Elements ---
     const cartSubtotalSpan = document.getElementById('cartSubtotal');
-    const cartDiscountInput = document.getElementById('cartDiscount'); // NEW
-    const cartTaxRateInput = document.getElementById('cartTaxRate');   // NEW
-    const cartTaxAmountSpan = document.getElementById('cartTaxAmount'); // MODIFIED (was hardcoded rate)
-    const cartTotalSpan = document.getElementById('cartTotal');         // MODIFIED (was different selector)
-    const paymentModalTotalH4 = document.getElementById('paymentModalTotal'); // MODIFIED (was different selector)
+    const cartDiscountInput = document.getElementById('cartDiscount'); // MODIFIED: Now for percentage
+    const cartTaxRateInput = document.getElementById('cartTaxRate');
+    const cartTaxAmountSpan = document.getElementById('cartTaxAmount');
+    const cartTotalSpan = document.getElementById('cartTotal');
+    const paymentModalTotalH4 = document.getElementById('paymentModalTotal');
 
     // --- Cash Payment Elements ---
     const cashAmountInput = document.getElementById('cashAmount');
-    const changeAmountDisplayDiv = document.getElementById('changeAmountDisplay'); // MODIFIED (was different selector)
+    const changeAmountDisplayDiv = document.getElementById('changeAmountDisplay');
 
     // --- Receipt Elements ---
     const receiptNumberSpan = document.getElementById('receiptNumber');
@@ -51,17 +51,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const receiptItemsContainer = receiptModal?.querySelector('.receipt-items');
     const receiptSummaryContainer = receiptModal?.querySelector('.receipt-summary');
     const receiptSubtotalSpan = document.getElementById('receiptSubtotal');
-    const receiptDiscountSpan = document.getElementById('receiptDiscount'); // NEW
-    const receiptTaxSpan = document.getElementById('receiptTax');         // NEW (was combined/different)
-    const receiptTotalSpan = document.getElementById('receiptTotal');       // NEW (was combined/different)
+    const receiptDiscountSpan = document.getElementById('receiptDiscount');
+    const receiptTaxSpan = document.getElementById('receiptTax');
+    const receiptTotalSpan = document.getElementById('receiptTotal');
 
 
     // --- Mobile Navigation ---
     const mobileNavToggle = document.getElementById('mobileNavToggle');
     const sidebar = document.getElementById('sidebar');
-
-    // --- REMOVED Constant ---
-    // const TAX_RATE = 0.10; // Tax rate is now dynamic
 
     // --- Helper Functions ---
     const openModal = (modal) => {
@@ -84,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `$${number.toFixed(2)}`;
     };
 
-    // --- Function to update cart totals (NOW includes Discount & Tax) ---
+    // --- Function to update cart totals (MODIFIED: Now uses % discount) ---
     const updateCartTotals = () => {
         console.log("Updating cart totals...");
         let subtotal = 0;
@@ -101,19 +98,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Get Discount and Tax Rate from inputs
-        let discountAmount = parseFloat(cartDiscountInput?.value) || 0;
-        const taxRatePercent = parseFloat(cartTaxRateInput?.value) || 0;
+        // Get Discount and Tax Rate from inputs (MODIFIED for % discount)
+        let discountRatePercent = cartDiscountInput?.value === '' ? 0 : parseFloat(cartDiscountInput?.value) || 0;
+        const taxRatePercent = cartTaxRateInput?.value === '' ? 0 : parseFloat(cartTaxRateInput?.value) || 0;
 
-        // Validate discount (cannot be negative or more than subtotal)
-        if (discountAmount < 0) discountAmount = 0;
-        if (discountAmount > subtotal) discountAmount = subtotal;
-        // Optionally update the input field if validation changed the value
-        if(cartDiscountInput && parseFloat(cartDiscountInput.value) !== discountAmount) {
-           cartDiscountInput.value = discountAmount.toFixed(2);
+        // Validate discount percentage (cannot be negative or more than 100%)
+        if (discountRatePercent < 0) discountRatePercent = 0;
+        if (discountRatePercent > 100) discountRatePercent = 100;
+        // Only update the input field if validation changed the value
+        if(cartDiscountInput && parseFloat(cartDiscountInput.value) !== discountRatePercent && cartDiscountInput.value !== '') {
+           cartDiscountInput.value = discountRatePercent.toFixed(1);
         }
 
-
+        // Calculate discount amount from percentage
+        const discountRateDecimal = discountRatePercent / 100;
+        const discountAmount = subtotal * discountRateDecimal;
+        
         const subtotalAfterDiscount = subtotal - discountAmount;
         const taxRateDecimal = taxRatePercent / 100;
         const taxAmount = subtotalAfterDiscount * taxRateDecimal;
@@ -121,8 +121,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update cart summary display
         if (cartSubtotalSpan) cartSubtotalSpan.textContent = formatCurrency(subtotal);
-        // Discount is already displayed via its input, but we could add a display span if needed
-        if (cartTaxAmountSpan) cartTaxAmountSpan.textContent = formatCurrency(taxAmount);
+        // Update discount amount display
+        const cartDiscountAmount = document.getElementById('cartDiscountAmount');
+        if (cartDiscountAmount) {
+            if (cartDiscountInput?.value === '') {
+                cartDiscountAmount.textContent = '$0.00';
+            } else {
+                cartDiscountAmount.textContent = `${formatCurrency(discountAmount)} (${discountRatePercent}%)`;
+            }
+        }
+        // Update tax and total
+        if (cartTaxAmountSpan) {
+            if (cartTaxRateInput?.value === '') {
+                cartTaxAmountSpan.textContent = '$0.00';
+            } else {
+                cartTaxAmountSpan.textContent = `${formatCurrency(taxAmount)} (${taxRatePercent}%)`;
+            }
+        }
         if (cartTotalSpan) cartTotalSpan.textContent = formatCurrency(total);
 
         // Update payment modal total
@@ -182,7 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const quantitySpan = existingCartItem.querySelector('.quantity');
             if (quantitySpan) {
                  let quantity = parseInt(quantitySpan.textContent) || 0;
-                 quantity++;
                  quantitySpan.textContent = quantity;
             } else {
                  console.error("Could not find quantity span for existing item:", productName);
@@ -191,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
              console.log(`Item "${productName}" is new, creating cart entry.`);
             const newItem = document.createElement('div');
             newItem.classList.add('cart-item');
-            newItem.setAttribute('data-product-name', productName); // Use name as identifier
+            newItem.setAttribute('data-product-name', productName);
             newItem.innerHTML = `
                 <div class="item-details">
                     <div class="item-image">
@@ -203,17 +217,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="item-controls">
                     <div class="quantity-control">
-                        <button class="quantity-btn" data-action="decrease">
+                        <button type="button" class="quantity-btn decrease-btn" data-action="decrease">
                             <i class="fas fa-minus"></i>
                         </button>
                         <span class="quantity">1</span>
-                        <button class="quantity-btn" data-action="increase">
+                        <button type="button" class="quantity-btn increase-btn" data-action="increase">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
-                    <div class="item-price" style="display: none;">${productPrice}</div> <button class="remove-item-btn" style="color: red; background: none; border: none; font-size: 1em; cursor: pointer; margin-left: 10px;">
-                         <i class="fas fa-trash-alt"></i>
-                     </button>
+                    <div class="item-price" style="display: none;">${productPrice}</div>
+                    <button type="button" class="remove-item-btn" style="color: red; background: none; border: none; font-size: 1em; cursor: pointer; margin-left: 10px;">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </div>
             `;
 
@@ -224,11 +239,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 cartItemsContainer.appendChild(newItem);
 
-                // Add event listeners for new buttons
-                newItem.querySelector('[data-action="increase"]').addEventListener('click', () => increaseQuantity(newItem));
-                newItem.querySelector('[data-action="decrease"]').addEventListener('click', () => decreaseQuantity(newItem));
-                newItem.querySelector('.remove-item-btn').addEventListener('click', () => removeCartItem(newItem));
+                // Add direct event listeners to the buttons
+                const increaseBtn = newItem.querySelector('.increase-btn');
+                const decreaseBtn = newItem.querySelector('.decrease-btn');
+                const removeBtn = newItem.querySelector('.remove-item-btn');
 
+                if (increaseBtn) {
+                    increaseBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        const quantitySpan = newItem.querySelector('.quantity');
+                        if (quantitySpan) {
+                            let quantity = parseInt(quantitySpan.textContent) || 0;
+                            quantitySpan.textContent = quantity + 1;
+                            updateCartTotals();
+                        }
+                    };
+                }
+
+                if (decreaseBtn) {
+                    decreaseBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        const quantitySpan = newItem.querySelector('.quantity');
+                        if (quantitySpan) {
+                            let quantity = parseInt(quantitySpan.textContent) || 0;
+                            if (quantity > 1) {
+                                quantitySpan.textContent = quantity - 1;
+                                updateCartTotals();
+                            } else {
+                                removeCartItem(newItem, true);
+                            }
+                        }
+                    };
+                }
+
+                if (removeBtn) {
+                    removeBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        removeCartItem(newItem, true);
+                    };
+                }
             } else {
                  console.error("cartItemsContainer not found. Cannot add new item.");
             }
@@ -237,60 +286,34 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCartTotals();
     };
 
-     // --- Update Quantity Functions (modified to take item element) ---
-     const increaseQuantity = (cartItem) => {
-         const quantitySpan = cartItem.querySelector('.quantity');
-         if (!quantitySpan) return;
-         let quantity = parseInt(quantitySpan.textContent) || 0;
-         quantity++;
-         quantitySpan.textContent = quantity;
-         updateCartTotals();
-     }
+    // --- Remove Cart Item Function ---
+    const removeCartItem = (cartItem, confirmFirst = false) => {
+        let removeItem = true;
+        if (confirmFirst) {
+            removeItem = confirm("Remove this item from the cart?");
+        }
+        if (removeItem && cartItem) {
+            cartItem.remove();
+            updateCartTotals();
+            // Check if cart is now empty
+            if (cartItemsContainer && cartItemsContainer.children.length === 0) {
+                 cartItemsContainer.innerHTML = '<p style="text-align: center; padding: 20px;">Cart is empty</p>';
+            }
+        }
+    }
 
-     const decreaseQuantity = (cartItem) => {
-         const quantitySpan = cartItem.querySelector('.quantity');
-         if (!quantitySpan) return;
-         let quantity = parseInt(quantitySpan.textContent) || 0;
-
-         if (quantity > 1) {
-             quantity--;
-             quantitySpan.textContent = quantity;
-             updateCartTotals();
-         } else {
-             removeCartItem(cartItem, true); // Ask for confirmation before removing
-         }
-     }
-
-     // --- Remove Cart Item Function ---
-     const removeCartItem = (cartItem, confirmFirst = false) => {
-         let removeItem = true;
-         if (confirmFirst) {
-             removeItem = confirm("Remove this item from the cart?");
-         }
-         if (removeItem && cartItem) {
-             cartItem.remove();
-             updateCartTotals();
-             // Check if cart is now empty
-             if (cartItemsContainer && cartItemsContainer.children.length === 0) {
-                  cartItemsContainer.innerHTML = '<p style="text-align: center; padding: 20px;">Cart is empty</p>';
-             }
-         }
-     }
-
-     // --- Update Clear Cart Button ---
-     if (clearCartBtn && cartItemsContainer) {
-         clearCartBtn.addEventListener('click', () => {
-             if (cartItemsContainer.children.length > 0 && !cartItemsContainer.querySelector('p')?.textContent.includes("Cart is empty")) {
-                  if (confirm("Are you sure you want to clear the entire cart?")) {
-                      cartItemsContainer.innerHTML = '<p style="text-align: center; padding: 20px;">Cart is empty</p>';
-                       // Reset discount and tax inputs
-                       if(cartDiscountInput) cartDiscountInput.value = '0';
-                       if(cartTaxRateInput) cartTaxRateInput.value = '10'; // Or your default tax
-                      updateCartTotals(); // Reset summary totals
-                  }
-             }
-         });
-     }
+    // --- Update Clear Cart Button ---
+    if (clearCartBtn && cartItemsContainer) {
+        clearCartBtn.addEventListener('click', () => {
+            if (cartItemsContainer.children.length > 0 && !cartItemsContainer.querySelector('p')?.textContent.includes("Cart is empty")) {
+                cartItemsContainer.innerHTML = '<p style="text-align: center; padding: 20px;">Cart is empty</p>';
+                // Reset discount and tax inputs
+                if(cartDiscountInput) cartDiscountInput.value = '';
+                if(cartTaxRateInput) cartTaxRateInput.value = '';
+                updateCartTotals(); // Reset summary totals
+            }
+        });
+    }
 
     // --- Event Listener for Product Clicks ---
     if (productGrid) {
@@ -301,24 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (clickedCard) {
                 console.log("Clicked on a product card.");
                 addOrUpdateCartItem(clickedCard);
-            } else {
-                 // Check if click was on quantity/remove buttons INSIDE cart (event bubbling)
-                 const increaseBtn = event.target.closest('.quantity-btn[data-action="increase"]');
-                 const decreaseBtn = event.target.closest('.quantity-btn[data-action="decrease"]');
-                 const removeBtn = event.target.closest('.remove-item-btn');
-                 const cartItemElement = event.target.closest('.cart-item');
-
-                 if(cartItemElement){
-                      if (increaseBtn) {
-                         increaseQuantity(cartItemElement);
-                      } else if (decreaseBtn) {
-                         decreaseQuantity(cartItemElement);
-                      } else if (removeBtn) {
-                         removeCartItem(cartItemElement, true); // Confirm removal
-                      }
-                 } else {
-                     console.log("Click was inside grid, but not on a product card or cart controls.");
-                 }
             }
         });
     } else {
@@ -328,6 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listener for Cart Item Actions (Event Delegation on Container) ---
     if (cartItemsContainer) {
         cartItemsContainer.addEventListener('click', (event) => {
+            event.stopPropagation(); // Stop event from bubbling up
             const cartItem = event.target.closest('.cart-item');
             if (!cartItem) return; // Exit if click wasn't within a cart item
 
@@ -336,10 +342,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const removeBtn = event.target.closest('.remove-item-btn');
 
             if (increaseBtn) {
+                event.preventDefault(); // Prevent default behavior
                 increaseQuantity(cartItem);
             } else if (decreaseBtn) {
+                event.preventDefault(); // Prevent default behavior
                 decreaseQuantity(cartItem);
             } else if (removeBtn) {
+                event.preventDefault(); // Prevent default behavior
                 removeCartItem(cartItem, true); // Confirm removal
             }
         });
@@ -361,15 +370,43 @@ document.addEventListener('DOMContentLoaded', () => {
     if (checkoutBtn && cartItemsContainer) {
         checkoutBtn.addEventListener('click', () => {
              if (!cartItemsContainer.querySelector('.cart-item')) { // Check if any cart item exists
-                 alert("Cart is empty. Please add products before checking out.");
+                 // Create error message element
+                 const errorMessage = document.createElement('div');
+                 errorMessage.className = 'cart-error-message';
+                 errorMessage.innerHTML = `
+                     <div class="error-content">
+                         <i class="fas fa-exclamation-circle"></i>
+                         <p>Cart is empty. Please add products before checking out.</p>
+                     </div>
+                 `;
+                 
+                 // Remove any existing error message
+                 const existingError = cartItemsContainer.querySelector('.cart-error-message');
+                 if (existingError) existingError.remove();
+                 
+                 // Add the error message to cart container
+                 cartItemsContainer.appendChild(errorMessage);
+                 
+                 // Auto-remove the message after 3 seconds
+                 setTimeout(() => {
+                     if (errorMessage && errorMessage.parentNode === cartItemsContainer) {
+                         errorMessage.remove();
+                         // If cart is still empty, show the default empty message
+                         if (!cartItemsContainer.querySelector('.cart-item')) {
+                             cartItemsContainer.innerHTML = '<p style="text-align: center; padding: 20px;">Cart is empty</p>';
+                         }
+                     }
+                 }, 3000);
+                 
                  return;
              }
-            updateCartTotals(); // Ensure totals are current before opening
-            openModal(paymentModal);
-            // Default to cash
-            paymentOptions?.forEach(opt => opt.classList.remove('active'));
-            paymentForms?.forEach(form => form.classList.remove('active'));
-            paymentModal?.querySelector('.payment-option[data-method="cash"]')?.classList.add('active');
+
+             updateCartTotals(); // Ensure totals are current before opening
+             openModal(paymentModal);
+             // Default to cash
+             paymentOptions?.forEach(opt => opt.classList.remove('active'));
+             paymentForms?.forEach(form => form.classList.remove('active'));
+             paymentModal?.querySelector('.payment-option[data-method="cash"]')?.classList.add('active');
              if (cashForm) cashForm.classList.add('active');
              updateChange(); // Calculate initial change based on current total
         });
@@ -510,9 +547,10 @@ document.addEventListener('DOMContentLoaded', () => {
         closeReceiptModalBtn.addEventListener('click', () => closeModal(receiptModal));
      }
 
-     // --- Function to Update Receipt Modal Content (NOW includes Discount/Tax) ---
+     // --- Function to Update Receipt Modal Content (MODIFIED: Now uses % discount) ---
      function updateReceiptDetails(paymentMethod) {
-         if (!receiptModal || !cartItemsContainer || !receiptSummaryContainer || !receiptItemsContainer || !receiptDetailsContainer) {
+         // Fix: Removed reference to nonexistent receiptDetailsContainer
+         if (!receiptModal || !cartItemsContainer || !receiptSummaryContainer || !receiptItemsContainer) {
              console.error("Cannot update receipt: Required modal or container elements missing.");
              return;
          }
@@ -526,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
          // Clear previous items
-         receiptItemsContainer.querySelectorAll('.receipt-item').forEach(item => item.remove());
+         receiptItemsContainer.querySelectorAll('.receipt-item:not(.receipt-item-header)').forEach(item => item.remove());
 
          // Add current items from cart
          currentCartItems.forEach(cartItem => {
@@ -546,16 +584,16 @@ document.addEventListener('DOMContentLoaded', () => {
              }
          });
 
-         // Update summary section from cart summary *display values*
-         const subtotal = cartSubtotalSpan?.textContent ?? '$0.00';
-         const discount = formatCurrency(parseFloat(cartDiscountInput?.value) || 0); // Get discount from input
-         const tax = cartTaxAmountSpan?.textContent ?? '$0.00';
-         const total = cartTotalSpan?.textContent ?? '$0.00';
-
-         if(receiptSubtotalSpan) receiptSubtotalSpan.textContent = subtotal;
-         if(receiptDiscountSpan) receiptDiscountSpan.textContent = discount; // Display the applied discount
-         if(receiptTaxSpan) receiptTaxSpan.textContent = tax;
-         if(receiptTotalSpan) receiptTotalSpan.textContent = total;
+         // MODIFIED: Calculate discount amount from percent for receipt display
+         const subtotal = parsePrice(cartSubtotalSpan?.textContent ?? '0');
+         const discountPercent = parseFloat(cartDiscountInput?.value) || 0;
+         const discountAmount = subtotal * (discountPercent / 100);
+         
+         // Update summary section from values
+         if(receiptSubtotalSpan) receiptSubtotalSpan.textContent = formatCurrency(subtotal);
+         if(receiptDiscountSpan) receiptDiscountSpan.textContent = `${formatCurrency(discountAmount)} (${discountPercent}%)`; // Show both amount and percentage
+         if(receiptTaxSpan) receiptTaxSpan.textContent = `${cartTaxAmountSpan?.textContent.split(' (')[0]} (${cartTaxRateInput?.value}%)`; // Show both amount and percentage
+         if(receiptTotalSpan) receiptTotalSpan.textContent = cartTotalSpan?.textContent ?? '$0.00';
 
          // Clear previous payment method details
          receiptSummaryContainer.querySelectorAll('.receipt-row.payment-method').forEach(row => row.remove());
@@ -602,7 +640,45 @@ document.addEventListener('DOMContentLoaded', () => {
      if (cartItemsContainer && cartItemsContainer.children.length === 0) {
          // Initial empty message is already in the HTML
      }
+    // Ensure discount and tax fields are empty on page load
+    if(cartDiscountInput) cartDiscountInput.value = '';
+    if(cartTaxRateInput) cartTaxRateInput.value = '';
     updateCartTotals(); // Calculate initial totals (will be 0 if cart empty)
+
+    // Add styles for the error message
+    const style = document.createElement('style');
+    style.textContent = `
+        .cart-error-message {
+            background-color: #fff3f3;
+            border: 1px solid #dc3545;
+            border-radius: 4px;
+            margin: 10px;
+            padding: 15px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .cart-error-message .error-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #dc3545;
+        }
+
+        .cart-error-message i {
+            font-size: 1.2em;
+        }
+
+        .cart-error-message p {
+            margin: 0;
+            font-size: 1em;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    `;
+    document.head.appendChild(style);
 
     console.log("Setup complete.");
 

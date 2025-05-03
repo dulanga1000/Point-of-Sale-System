@@ -1,6 +1,6 @@
 <%-- 
     Document   : login
-    Created on : May 3, 2025, 8:26:57 PM
+    Created on : May 4, 2025, 4:21:14 AM
     Author     : dulan
 --%>
 
@@ -11,11 +11,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Swift Login</title>
-  <link rel="stylesheet" type="text/css" href="Login/styles.css">
+  <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/Login/styles.css">
 </head>
 <body>
   <div class="container">
-      <img class="logo" src="Images/logo.png">
+      <img class="logo" src="../Images/logo.png">
     <div class="welcome-text">Welcome to Swift</div>
     
     <div class="login-form">

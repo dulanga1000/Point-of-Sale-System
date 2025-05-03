@@ -1,6 +1,6 @@
 <%-- 
     Document   : cashier_dashboard
-    Created on : May 3, 2025, 8:18:34 PM
+    Created on : May 4, 2025, 4:20:32 AM
     Author     : dulan
 --%>
 
@@ -12,66 +12,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cashier Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <link rel="Stylesheet" href="cstyle.css">
-  <style>
-    .input-with-symbol {
-      display: flex;
-      align-items: center;
-      border: 1px solid #ccc;
-      padding: 0 5px;
-      border-radius: 4px;
-    }
-    .input-with-symbol input {
-      border: none;
-      outline: none;
-      padding: 8px 5px;
-      text-align: right;
-      width: 60px; /* Adjust as needed */
-      flex-grow: 1; /* Allow input to take available space if needed */
-       -moz-appearance: textfield; /* Firefox */
-    }
-      .input-with-symbol input::-webkit-outer-spin-button,
-      .input-with-symbol input::-webkit-inner-spin-button {
-         -webkit-appearance: none;
-         margin: 0;
-      }
-    .input-with-symbol span {
-      padding: 0 5px;
-      color: #555;
-    }
-    .summary-row.input-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .summary-row.input-row label {
-      margin-right: 10px;
-      white-space: nowrap;
-    }
-    .input-with-icon {
-      display: flex;
-      align-items: center;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      padding-left: 10px;
-    }
-    .input-with-icon .currency-symbol {
-       padding-right: 5px;
-       color: #555;
-    }
-     .input-with-icon input {
-       border: none;
-       outline: none;
-       padding: 8px 5px;
-       flex-grow: 1;
-       -moz-appearance: textfield; /* Firefox */
-     }
-       .input-with-icon input::-webkit-outer-spin-button,
-       .input-with-icon input::-webkit-inner-spin-button {
-           -webkit-appearance: none;
-           margin: 0;
-       }
-  </style>
+  <script src="script.js"></script>
+  <link rel="Stylesheet" href="styles.css">
   </head>
 <body>
   <div class="mobile-top-bar">
@@ -294,19 +236,23 @@
                 <span id="cartSubtotal">$0.00</span>
               </div>
               <div class="summary-row input-row">
-                <label for="cartDiscount">Discount ($)</label>
-                 <div class="input-with-symbol">
-                    <span>$</span>
-                    <input type="number" id="cartDiscount" value="0" min="0" step="0.01" placeholder="0.00">
-                 </div>
+                <label for="cartDiscount">Discount (%)</label>
+                <div class="input-with-symbol">
+                  <input type="number" id="cartDiscount" value="" min="0" max="100" step="0.1" placeholder="0.0">
+                  <span>%</span>
+                </div>
               </div>
-               <div class="summary-row input-row">
-                 <label for="cartTaxRate">Tax (%)</label>
-                 <div class="input-with-symbol">
-                    <input type="number" id="cartTaxRate" value="10" min="0" step="0.1" placeholder="10">
-                    <span>%</span>
-                 </div>
-               </div>
+              <div class="summary-row">
+                <span>Discount</span>
+                <span id="cartDiscountAmount">$0.00 (0%)</span>
+              </div>
+              <div class="summary-row input-row">
+                <label for="cartTaxRate">Tax (%)</label>
+                <div class="input-with-symbol">
+                  <input type="number" id="cartTaxRate" value="" min="0" step="0.1" placeholder="0">
+                  <span>%</span>
+                </div>
+              </div>
               <div class="summary-row">
                 <span>Tax</span>
                 <span id="cartTaxAmount">$0.00</span>
