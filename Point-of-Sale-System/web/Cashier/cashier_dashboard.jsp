@@ -6,7 +6,6 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -14,6 +13,65 @@
   <title>Cashier Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="Stylesheet" href="cstyle.css">
+  <style>
+    .input-with-symbol {
+      display: flex;
+      align-items: center;
+      border: 1px solid #ccc;
+      padding: 0 5px;
+      border-radius: 4px;
+    }
+    .input-with-symbol input {
+      border: none;
+      outline: none;
+      padding: 8px 5px;
+      text-align: right;
+      width: 60px; /* Adjust as needed */
+      flex-grow: 1; /* Allow input to take available space if needed */
+       -moz-appearance: textfield; /* Firefox */
+    }
+      .input-with-symbol input::-webkit-outer-spin-button,
+      .input-with-symbol input::-webkit-inner-spin-button {
+         -webkit-appearance: none;
+         margin: 0;
+      }
+    .input-with-symbol span {
+      padding: 0 5px;
+      color: #555;
+    }
+    .summary-row.input-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .summary-row.input-row label {
+      margin-right: 10px;
+      white-space: nowrap;
+    }
+    .input-with-icon {
+      display: flex;
+      align-items: center;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding-left: 10px;
+    }
+    .input-with-icon .currency-symbol {
+       padding-right: 5px;
+       color: #555;
+    }
+     .input-with-icon input {
+       border: none;
+       outline: none;
+       padding: 8px 5px;
+       flex-grow: 1;
+       -moz-appearance: textfield; /* Firefox */
+     }
+       .input-with-icon input::-webkit-outer-spin-button,
+       .input-with-icon input::-webkit-inner-spin-button {
+           -webkit-appearance: none;
+           margin: 0;
+       }
+  </style>
   </head>
 <body>
   <div class="mobile-top-bar">
@@ -430,66 +488,6 @@
     </div>
   </div>
 </div>
-
-<style>
-  .input-with-symbol {
-    display: flex;
-    align-items: center;
-    border: 1px solid #ccc;
-    padding: 0 5px;
-    border-radius: 4px;
-  }
-  .input-with-symbol input {
-    border: none;
-    outline: none;
-    padding: 8px 5px;
-    text-align: right;
-    width: 60px; /* Adjust as needed */
-    flex-grow: 1; /* Allow input to take available space if needed */
-     -moz-appearance: textfield; /* Firefox */
-  }
-    .input-with-symbol input::-webkit-outer-spin-button,
-    .input-with-symbol input::-webkit-inner-spin-button {
-       -webkit-appearance: none;
-       margin: 0;
-    }
-  .input-with-symbol span {
-    padding: 0 5px;
-    color: #555;
-  }
-  .summary-row.input-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .summary-row.input-row label {
-    margin-right: 10px;
-    white-space: nowrap;
-  }
-  .input-with-icon {
-    display: flex;
-    align-items: center;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding-left: 10px;
-  }
-  .input-with-icon .currency-symbol {
-     padding-right: 5px;
-     color: #555;
-  }
-   .input-with-icon input {
-     border: none;
-     outline: none;
-     padding: 8px 5px;
-     flex-grow: 1;
-     -moz-appearance: textfield; /* Firefox */
-   }
-     .input-with-icon input::-webkit-outer-spin-button,
-     .input-with-icon input::-webkit-inner-spin-button {
-         -webkit-appearance: none;
-         margin: 0;
-     }
-</style>
 
 <script src="cscript.js"></script>
 
