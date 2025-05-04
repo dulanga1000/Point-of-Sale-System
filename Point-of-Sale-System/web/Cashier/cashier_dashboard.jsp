@@ -425,8 +425,8 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="print-btn">
-        <i class="fas fa-print"></i> Print Receipt
+      <button class="print-btn"
+        onclick="window.open('print-receipt', '_blank')">Print Receipt
       </button>
       <button class="email-btn">
         <i class="fas fa-envelope"></i> Email Receipt
