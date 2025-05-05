@@ -367,6 +367,11 @@ input:focus {
   color: var(--warning);
 }
 
+.stock-info.out out {
+    color: #dc3545;
+    font-weight: bold;
+}
+
 .stock-info i {
   margin-right: 5px;
 }
