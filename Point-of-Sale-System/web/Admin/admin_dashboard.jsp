@@ -31,33 +31,7 @@
         <img src="${pageContext.request.contextPath}/Images/logo.png" alt="POS Logo">
         <h2>Swift</h2>
       </div>
-      
-      <ul class="menu">
-        <li class="menu-item active">
-          <i>📊</i> Dashboard
-        </li>
-        <li class="menu-item">
-          <i>👤</i> User Management
-        </li>
-        <li class="menu-item">
-          <i>📦</i> Products
-        </li>
-        <li class="menu-item">
-          <i>🏭</i> Suppliers
-        </li>
-        <li class="menu-item">
-          <i>📈</i> Sales Reports
-        </li>
-        <li class="menu-item">
-          <i>📋</i> Inventory
-        </li>
-        <li class="menu-item">
-          <i>⚙️</i> Settings
-        </li>        
-        <li class="menu-item">
-          <i>↩️️</i> Logout
-        </li>        
-      </ul>
+        <jsp:include page="menu.jsp" />
     </div>
     
     <!-- Main Content -->

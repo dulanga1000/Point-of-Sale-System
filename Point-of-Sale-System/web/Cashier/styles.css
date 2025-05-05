@@ -367,7 +367,7 @@ input:focus {
   color: var(--warning);
 }
 
-.stock-info.out out {
+.stock-info.out {
     color: #dc3545;
     font-weight: bold;
 }
@@ -899,3 +899,4 @@ input:focus {
 .modal.active {
   display: flex;
 }
+
