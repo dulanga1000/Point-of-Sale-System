@@ -15,7 +15,7 @@
 </head>
 <body>
   <div class="container">
-      <img class="logo" src="../Images/logo.png">
+      <img class="logo" src="Images/logo.png">
     <div class="welcome-text">Welcome to Swift</div>
     
     <div class="login-form">

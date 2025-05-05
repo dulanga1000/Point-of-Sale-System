@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cashier Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <script src="script.js"></script>
+  <script src="cscript.js"></script>
   <link rel="Stylesheet" href="styles.css">
   </head>
 <body>
@@ -359,6 +359,82 @@
     </div>
   </div>
 </div>
+
+<div class="modal" id="receiptModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Receipt</h3>
+      <button class="close-modal" id="closeReceiptModal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="receipt-container">
+        <div class="receipt-header">
+            <div class="store-logo" id="store-logo">
+            <img src="../Images/logo.png" alt="POS Logo" class="logo-img">
+          </div>
+          <h2>Swift POS Store</h2> <p>123/2, High level Road, Homagama.</p>
+          <p>Tel: (+94) 76-2375055</p>
+        </div>
+        <div class="receipt-details">
+          <div class="receipt-row">
+            <span>Receipt #:</span>
+            <span id="receiptNumber">INV-YYYYMMDD-XXX</span>
+          </div>
+          <div class="receipt-row">
+            <span>Date:</span>
+            <span id="receiptDate">Month DD, YYYY HH:MM AM/PM</span>
+          </div>
+          <div class="receipt-row">
+            <span>Cashier:</span>
+            <span>John Doe</span> </div>
+        </div>
+        <div class="receipt-items">
+          <div class="receipt-item-header">
+            <span class="item-name">Item</span>
+            <span class="item-qty">Qty</span>
+            <span class="item-price">Price</span>
+          </div>
+          </div>
+        <div class="receipt-summary">
+          <div class="receipt-row">
+            <span>Subtotal:</span>
+            <span id="receiptSubtotal">$0.00</span>
+          </div>
+          <div class="receipt-row">
+            <span>Discount:</span>
+            <span id="receiptDiscount">$0.00</span>
+          </div>
+          <div class="receipt-row">
+            <span>Tax:</span>
+            <span id="receiptTax">$0.00</span>
+          </div>
+          <div class="receipt-row total">
+            <span>Total:</span>
+            <span id="receiptTotal">$0.00</span>
+          </div>
+          </div>
+        <div class="receipt-footer">
+          <p>Thank you for shopping with us!</p>
+          <p>Return policy: Items can be returned within 30 days with receipt</p>
+          <div class="barcode">
+             <img src="https://barcode.tec-it.com/barcode.ashx?data=123456789012&code=Code128&translate-esc=on" alt="Barcode" style="height: 50px;">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="print-btn">
+        <i class="fas fa-print"></i> Print Receipt
+      </button>
+      <button class="email-btn">
+        <i class="fas fa-envelope"></i> Email Receipt
+      </button>
+    </div>
+  </div>
+</div>
+
 <script src="cscript.js"></script>
 
 </body>
