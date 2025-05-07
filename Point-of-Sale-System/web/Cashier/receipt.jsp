@@ -47,7 +47,7 @@
 
     // Summary
     String subtotal = request.getParameter("subtotal");
-    String discount = request.getParameter("discount"); // Format: "$Amount (Rate%)"
+    String discount = request.getParameter("discount"); // Format: "$SAmount (Rate%)"
     String tax = request.getParameter("tax");           // Format: "$Amount (Rate%)"
     String total = request.getParameter("total");
 
@@ -61,10 +61,10 @@
     if (receiptNumber == null) receiptNumber = "N/A";
     if (receiptDate == null) receiptDate = "N/A";
     if (cashier == null) cashier = "System";
-    if (subtotal == null) subtotal = "$0.00";
-    if (discount == null) discount = "$0.00 (0%)";
-    if (tax == null) tax = "$0.00 (0%)";
-    if (total == null) total = "$0.00";
+    if (subtotal == null) subtotal = "Rs.0.00";
+    if (discount == null) discount = "Rs.0.00 (0%)";
+    if (tax == null) tax = "Rs.0.00 (0%)";
+    if (total == null) total = "Rs.0.00";
     if (paymentMethod == null) paymentMethod = "Unknown";
 
 %>

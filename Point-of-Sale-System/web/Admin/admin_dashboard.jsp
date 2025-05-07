@@ -50,7 +50,7 @@
       <div class="stats-container">
         <div class="stat-card">
           <h3>DAILY SALES</h3>
-          <div class="value">$2,459</div>
+          <div class="value">Rs.2,459</div>
           <div class="trend up">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="18 15 12 9 6 15"></polyline>
@@ -61,7 +61,7 @@
         
         <div class="stat-card">
           <h3>MONTHLY SALES</h3>
-          <div class="value">$42,085</div>
+          <div class="value">Rs.42,085</div>
           <div class="trend up">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="18 15 12 9 6 15"></polyline>
@@ -215,25 +215,25 @@
               <tbody>
                 <tr>
                   <td>John Doe</td>
-                  <td>$854.20</td>
+                  <td>Rs.854.20</td>
                   <td>24</td>
                   <td><span class="status completed">Active</span></td>
                 </tr>
                 <tr>
                   <td>Emma Wilson</td>
-                  <td>$762.50</td>
+                  <td>Rs.762.50</td>
                   <td>18</td>
                   <td><span class="status completed">Active</span></td>
                 </tr>
                 <tr>
                   <td>Michael Brown</td>
-                  <td>$645.75</td>
+                  <td>Rs.645.75</td>
                   <td>15</td>
                   <td><span class="status completed">Active</span></td>
                 </tr>
                 <tr>
                   <td>Sarah Johnson</td>
-                  <td>$196.80</td>
+                  <td>Rs.196.80</td>
                   <td>5</td>
                   <td><span class="status pending">Break</span></td>
                 </tr>
@@ -266,7 +266,7 @@
                 <td>#ORD-7894</td>
                 <td>John Doe</td>
                 <td>5 items</td>
-                <td>$124.00</td>
+                <td>Rs.124.00</td>
                 <td>Cash</td>
                 <td>April 28, 2025 09:45</td>
                 <td><span class="status completed">Completed</span></td>
@@ -275,7 +275,7 @@
                 <td>#ORD-7893</td>
                 <td>Emma Wilson</td>
                 <td>3 items</td>
-                <td>$86.50</td>
+                <td>Rs.86.50</td>
                 <td>Card</td>
                 <td>April 28, 2025 09:32</td>
                 <td><span class="status completed">Completed</span></td>
@@ -284,7 +284,7 @@
                 <td>#ORD-7892</td>
                 <td>Michael Brown</td>
                 <td>2 items</td>
-                <td>$45.20</td>
+                <td>Rs.45.20</td>
                 <td>QR Code</td>
                 <td>April 28, 2025 09:27</td>
                 <td><span class="status completed">Completed</span></td>
@@ -293,7 +293,7 @@
                 <td>#ORD-7891</td>
                 <td>Sarah Johnson</td>
                 <td>7 items</td>
-                <td>$196.80</td>
+                <td>Rs.196.80</td>
                 <td>Card</td>
                 <td>April 28, 2025 09:15</td>
                 <td><span class="status completed">Completed</span></td>
@@ -302,7 +302,7 @@
                 <td>#ORD-7890</td>
                 <td>John Doe</td>
                 <td>1 item</td>
-                <td>$12.99</td>
+                <td>Rs.12.99</td>
                 <td>Cash</td>
                 <td>April 28, 2025 09:02</td>
                 <td><span class="status completed">Completed</span></td>
