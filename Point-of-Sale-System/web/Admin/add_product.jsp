@@ -1,6 +1,6 @@
 <%-- 
     Document   : add_product
-    Created on : May 5, 2025, 8:34:17 PM
+    Created on : May 5, 2025, 8:34:17 PM
     Author     : User
 --%>
 
@@ -172,6 +172,24 @@
             box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
         }
 
+        .success-message {
+            background-color: var(--success);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message {
+            background-color: var(--danger);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .pos-container {
                 padding: 30px 20px;
@@ -199,7 +217,24 @@
             <div class="form-title">Add New Product</div>
         </div>
         
-        <form action="addProduct" method="POST" enctype="multipart/form-data">
+        <% if (request.getParameter("success") != null) { %>
+            <div class="success-message" style="display: block;">
+                Product added successfully!
+            </div>
+        <% } %>
+        
+        <% if (request.getParameter("error") != null) { %>
+            <div class="error-message" style="display: block;">
+                Error: <%= request.getParameter("error").equals("db_insert") ? "Failed to add product to database" : 
+                          request.getParameter("error").equals("sql_exception") ? "Database error occurred" : 
+                          request.getParameter("error").equals("io_exception") ? "File upload error" : 
+                          request.getParameter("error").equals("servlet_exception") ? "Error processing request" :
+                          request.getParameter("error").equals("driver_not_found") ? "Database driver not found" :
+                          "An unexpected error occurred" %>
+            </div>
+        <% } %>
+        
+        <form action="/Point-of-Sale-System/addProduct" method="POST" enctype="multipart/form-data">
             <div class="input-group">
                 <label for="product_name">Product Name</label>
                 <input type="text" id="product_name" name="product_name" placeholder="Enter product name" required>
@@ -242,7 +277,7 @@
             <div class="input-group">
                 <label for="product_supplier">Supplier</label>
                 <select id="product_supplier" name="product_supplier" required>
-                    <option value="">Select Category</option>
+                    <option value="">Select Supplier</option>
                     <option value="Coffee">Coffee</option>
                     <option value="Tea">Tea</option>
                     <option value="Pastries">Pastries</option>
@@ -262,7 +297,7 @@
             <div class="input-group">
                 <label for="product_status">Status</label>
                 <select id="product_status" name="product_status" required>
-                    <option value="">Select Category</option>
+                    <option value="">Select Status</option>
                     <option value="Active">Active</option>
                     <option value="Low Stock">Low Stock</option>
                     <option value="Deactivate">Deactivate</option>
@@ -274,5 +309,31 @@
             </div>
         </form>
     </div>
+    
+    <script>
+        // Fade out success/error messages after 5 seconds
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const successMessage = document.querySelector('.success-message');
+                const errorMessage = document.querySelector('.error-message');
+                
+                if (successMessage && successMessage.style.display === 'block') {
+                    successMessage.style.opacity = '0';
+                    successMessage.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        successMessage.style.display = 'none';
+                    }, 500);
+                }
+                
+                if (errorMessage && errorMessage.style.display === 'block') {
+                    errorMessage.style.opacity = '0';
+                    errorMessage.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        errorMessage.style.display = 'none';
+                    }, 500);
+                }
+            }, 5000);
+        });
+    </script>
 </body>
 </html>
