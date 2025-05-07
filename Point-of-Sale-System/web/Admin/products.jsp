@@ -699,7 +699,11 @@
                                 </td>
                                 <td><%= product.getSku() != null ? product.getSku() : "N/A" %></td> <%-- Display SKU --%>
                                 <td><%= product.getCategory() != null ? product.getCategory() : "N/A" %></td> <%-- Display Category --%>
+<<<<<<< HEAD
                                 <td>Rs.<%= df.format(product.getPrice()) %></td> <%-- Display formatted Price --%>
+=======
+                                <td>$<%= df.format(product.getPrice()) %></td> <%-- Display formatted Price --%>
+>>>>>>> 47948b02a47d0199b7ad57f516ad17bc4922d6dd
                                 <td>
                                     <%
                                         String stockClass = "low"; // Default to low

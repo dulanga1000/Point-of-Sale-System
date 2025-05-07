@@ -325,7 +325,11 @@
             </div>
 
             <div class="input-group">
+<<<<<<< HEAD
                 <label for="product_price">Price (Rs.)</label>
+=======
+                <label for="product_price">Price ($)</label>
+>>>>>>> 47948b02a47d0199b7ad57f516ad17bc4922d6dd
                 <input type="number" id="product_price" name="product_price" value="<%= productPrice %>" placeholder="0.00" step="0.01" min="0" required>
             </div>
 
