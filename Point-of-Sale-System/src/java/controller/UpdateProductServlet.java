@@ -97,7 +97,7 @@ public class UpdateProductServlet extends HttpServlet {
             }
 
             // 2. Handle image upload with duplicate filename check
-            Part imagePart = request.getPart("product_image");
+            Part imagePart = request.getPart("productImage");
             String submittedFileName = imagePart != null ? imagePart.getSubmittedFileName() : null;
             String imagePath = currentImagePath; // Use current image path by default
 
@@ -112,20 +112,15 @@ public class UpdateProductServlet extends HttpServlet {
                 // Create directory if it doesn't exist
                 if (!fileSaveDir.exists()) {
                     boolean dirCreated = fileSaveDir.mkdirs();
-                    if(dirCreated) {
-                        System.out.println("Created upload directory: " + uploadPath);
-                    } else {
+                    if(!dirCreated) {
                         System.err.println("Failed to create upload directory: " + uploadPath);
-                        // If directory creation fails, we cannot save the image
-                        // Proceed with default image and log error
-                        System.err.println("Image upload failed: Could not create upload directory.");
-                        // Skip saving the file and use default imagePath
-                        originalFileName = null; // Indicate that file was not saved
+                        response.sendRedirect(request.getContextPath() + "/Admin/update_product.jsp?id=" + id + "&error=upload_dir_failed");
+                        return;
                     }
                 }
 
-                // Only proceed with file saving if directory exists and is writable (basic check)
-                if (originalFileName != null && fileSaveDir.exists() && fileSaveDir.isDirectory()) {
+                // Only proceed with file saving if directory exists and is writable
+                if (fileSaveDir.exists() && fileSaveDir.isDirectory() && fileSaveDir.canWrite()) {
                     String baseFileName = originalFileName;
                     String extension = "";
                     int dotIndex = originalFileName.lastIndexOf('.');
@@ -134,48 +129,45 @@ public class UpdateProductServlet extends HttpServlet {
                         extension = originalFileName.substring(dotIndex); // Includes the dot
                     }
 
-                    File targetFile = new File(fileSaveDir, originalFileName);
-                    int count = 0;
-                    String uniqueFileName = originalFileName;
+                    // Generate unique filename with timestamp
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+                    String timestamp = sdf.format(new Date());
+                    String uniqueFileName = baseFileName + "_" + timestamp + extension;
+                    File targetFile = new File(fileSaveDir, uniqueFileName);
 
-                    // Check for existing file and generate unique name if necessary
-                    while (targetFile.exists()) {
-                        // Use timestamp for more unique filenames
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-                        String timestamp = sdf.format(new Date());
-                        uniqueFileName = baseFileName + "_" + timestamp + extension;
-
-                        targetFile = new File(fileSaveDir, uniqueFileName);
-                        count++;
-                    }
-
-                    String filePath = fileSaveDir.getAbsolutePath() + File.separator + uniqueFileName;
-                    imagePart.write(filePath); // Write the image file to the server
-
-                    // Store the relative path (accessible from the browser) in the database
-                    imagePath = "Images/" + uniqueFileName;
-                    System.out.println("Image saved to: " + filePath + ", DB path: " + imagePath);
-                    
-                    // Optional: Delete old image file if it's not the default
-                    if (currentImagePath != null && !currentImagePath.isEmpty() && !currentImagePath.equals("Images/default.jpg")) {
-                        try {
-                            File oldImageFile = new File(getServletContext().getRealPath("/") + currentImagePath);
-                            if (oldImageFile.exists() && oldImageFile.isFile()) {
-                                boolean deleted = oldImageFile.delete();
-                                if (deleted) {
-                                    System.out.println("Old image file deleted: " + currentImagePath);
-                                } else {
-                                    System.err.println("Failed to delete old image file: " + currentImagePath);
+                    try {
+                        // Write the image file to the server
+                        imagePart.write(targetFile.getAbsolutePath());
+                        
+                        // Verify the file was written successfully
+                        if (targetFile.exists() && targetFile.length() > 0) {
+                            // Store the relative path (accessible from the browser) in the database
+                            imagePath = "Images/" + uniqueFileName;
+                            System.out.println("Image saved successfully to: " + targetFile.getAbsolutePath());
+                            
+                            // Delete old image file if it's not the default
+                            if (currentImagePath != null && !currentImagePath.isEmpty() && !currentImagePath.equals("Images/default.jpg")) {
+                                File oldImageFile = new File(getServletContext().getRealPath("/") + currentImagePath);
+                                if (oldImageFile.exists() && oldImageFile.isFile()) {
+                                    if (!oldImageFile.delete()) {
+                                        System.err.println("Warning: Failed to delete old image file: " + currentImagePath);
+                                    }
                                 }
                             }
-                        } catch (Exception e) {
-                            System.err.println("Error deleting old image file: " + e.getMessage());
+                        } else {
+                            System.err.println("Failed to save image file: " + targetFile.getAbsolutePath());
+                            response.sendRedirect(request.getContextPath() + "/Admin/update_product.jsp?id=" + id + "&error=file_save_failed");
+                            return;
                         }
+                    } catch (Exception e) {
+                        System.err.println("Error saving image file: " + e.getMessage());
+                        response.sendRedirect(request.getContextPath() + "/Admin/update_product.jsp?id=" + id + "&error=file_save_error");
+                        return;
                     }
                 } else {
-                    // Directory didn't exist or originalFileName was null after checks
-                    System.err.println("Image upload failed: Could not save file to directory.");
-                    // imagePath remains as currentImagePath
+                    System.err.println("Upload directory is not writable: " + uploadPath);
+                    response.sendRedirect(request.getContextPath() + "/Admin/update_product.jsp?id=" + id + "&error=dir_not_writable");
+                    return;
                 }
             }
 

@@ -19,6 +19,7 @@
           </a>
         </li>
         <li class="menu-item">
+           <a href="user_management.jsp" style="text-decoration: none; color: inherit;">
           <i>👤</i> User Management
         </li>
         <li class="menu-item">

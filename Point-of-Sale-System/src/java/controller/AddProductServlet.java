@@ -13,7 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException; // Import SQLException
 import java.util.Date; // Import Date for timestamp
 import java.text.SimpleDateFormat; // Import SimpleDateFormat for formatting timestamp
-
+import java.sql.ResultSet;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -22,16 +22,20 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
+import model.Product;
+import dao.ProductDAO;
 
 /**
  *
  * @author User
  */
 
-@WebServlet("/addProduct")
-@MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2,  // 2MB
-        maxFileSize = 1024 * 1024 * 10,             // 10MB
-        maxRequestSize = 1024 * 1024 * 50)          // 50MB
+@WebServlet("/AddProductServlet")
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024, // 1 MB
+    maxFileSize = 1024 * 1024 * 5,   // 5 MB
+    maxRequestSize = 1024 * 1024 * 10 // 10 MB
+)
 public class AddProductServlet extends HttpServlet {
 
     // Database connection details (as provided in your original code)
@@ -58,6 +62,13 @@ public class AddProductServlet extends HttpServlet {
             String supplier = getSafeParam(request, "product_supplier");
             String status = getSafeParam(request, "product_status");
 
+            // Validate required fields
+            if (name.isEmpty() || category.isEmpty() || sku.isEmpty() || 
+                stockStr.isEmpty() || priceStr.isEmpty() || supplier.isEmpty() || status.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/Admin/add_product.jsp?error=missing_fields");
+                return;
+            }
+
             int stock = 0;
             double price = 0.0;
 
@@ -81,87 +92,76 @@ public class AddProductServlet extends HttpServlet {
                 }
             }
 
-
-            // 2. Handle image upload with duplicate filename check
-            Part imagePart = request.getPart("product_image");
-            String submittedFileName = imagePart != null ? imagePart.getSubmittedFileName() : null;
-            String imagePath = "Images/default.jpg"; // Default image path
-
-            if (submittedFileName != null && !submittedFileName.isEmpty()) {
-                 String originalFileName = Paths.get(submittedFileName).getFileName().toString(); // Get just the filename
-
-                 // Get the real path to the "Images" folder inside the web application
-                 String uploadPath = getServletContext().getRealPath("/Images");
-                 File fileSaveDir = new File(uploadPath);
-
-                 // Create directory if it doesn't exist
-                 if (!fileSaveDir.exists()) {
-                     boolean dirCreated = fileSaveDir.mkdirs();
-                     if(dirCreated) {
-                         System.out.println("Created upload directory: " + uploadPath);
-                     } else {
-                         System.err.println("Failed to create upload directory: " + uploadPath);
-                         // If directory creation fails, we cannot save the image
-                         // Proceed with default image and log error
-                         System.err.println("Image upload failed: Could not create upload directory.");
-                         // Skip saving the file and use default imagePath
-                         originalFileName = null; // Indicate that file was not saved
-                     }
-                 }
-
-                 // Only proceed with file saving if directory exists and is writable (basic check)
-                 if (originalFileName != null && fileSaveDir.exists() && fileSaveDir.isDirectory()) {
-                     String baseFileName = originalFileName;
-                     String extension = "";
-                     int dotIndex = originalFileName.lastIndexOf('.');
-                     if (dotIndex > 0 && dotIndex < originalFileName.length() - 1) {
-                         baseFileName = originalFileName.substring(0, dotIndex);
-                         extension = originalFileName.substring(dotIndex); // Includes the dot
-                     }
-
-                     File targetFile = new File(fileSaveDir, originalFileName);
-                     int count = 0;
-                     String uniqueFileName = originalFileName;
-
-                     // Check for existing file and generate unique name if necessary
-                     while (targetFile.exists()) {
-                         // Option 1: Append a counter
-                         // uniqueFileName = baseFileName + "_" + count + extension;
-                         // Option 2: Append a timestamp (more unique)
-                         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-                         String timestamp = sdf.format(new Date());
-                         uniqueFileName = baseFileName + "_" + timestamp + extension;
-
-                         targetFile = new File(fileSaveDir, uniqueFileName);
-                         count++;
-                         // Optional: Add a limit to count to prevent infinite loops, though timestamp is better
-                         // if (count > 100) { throw new IOException("Could not generate unique filename."); }
-                     }
-
-                     String filePath = fileSaveDir.getAbsolutePath() + File.separator + uniqueFileName;
-                     imagePart.write(filePath); // Write the image file to the server
-
-                     // Store the relative path (accessible from the browser) in the database
-                     imagePath = "Images/" + uniqueFileName;
-                     System.out.println("Image saved to: " + filePath + ", DB path: " + imagePath);
-                 } else {
-                     // Directory didn't exist or originalFileName was null after checks
-                     System.err.println("Image upload failed: Could not save file to directory.");
-                     // imagePath remains default.jpg
-                 }
-
-            } else {
-                 // No image uploaded or part was empty, use default image path
-                 System.out.println("No image file uploaded or part was empty. Using default image.");
-                 imagePath = "Images/default.jpg";
-            }
-
-
-            // 3. Database insert
-            // Using DriverManager directly as in your original code
+            // Establish database connection first
             Class.forName("com.mysql.cj.jdbc.Driver");
             con = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
 
+            // Validate SKU format
+            if (!sku.matches("^[A-Z0-9!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]*$")) {
+                response.sendRedirect(request.getContextPath() + "/Admin/add_product.jsp?error=invalid_sku");
+                return;
+            }
+
+            // Check if SKU already exists
+            String checkSkuQuery = "SELECT COUNT(*) FROM products WHERE sku = ?";
+            PreparedStatement checkSkuStmt = con.prepareStatement(checkSkuQuery);
+            checkSkuStmt.setString(1, sku);
+            ResultSet rs = checkSkuStmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                response.sendRedirect(request.getContextPath() + "/Admin/add_product.jsp?error=sku_exists");
+                return;
+            }
+            checkSkuStmt.close();
+
+            // 2. Handle image upload
+            String imagePath = "Images/default.jpg"; // Default image path
+            Part filePart = request.getPart("productImage");
+            if (filePart != null && filePart.getSize() > 0) {
+                try {
+                    // Always use the project-relative web/Images directory
+                    String uploadPath = request.getServletContext().getRealPath("/Images");
+                    
+                    // Create upload directory if it doesn't exist
+                    File uploadDir = new File(uploadPath);
+                    if (!uploadDir.exists()) {
+                        if (!uploadDir.mkdirs()) {
+                            response.sendRedirect(request.getContextPath() + "/Admin/add_product.jsp?error=upload_dir_failed");
+                            return;
+                        }
+                    }
+                    
+                    if (!uploadDir.canWrite()) {
+                        response.sendRedirect(request.getContextPath() + "/Admin/add_product.jsp?error=dir_not_writable");
+                        return;
+                    }
+                    
+                    // Generate unique filename
+                    String fileName = getSubmittedFileName(filePart);
+                    String uniqueFileName = System.currentTimeMillis() + "_" + fileName;
+                    
+                    // Save the file
+                    File outputFile = new File(uploadDir, uniqueFileName);
+                    
+                    // Write the file
+                    filePart.write(outputFile.getAbsolutePath());
+                    
+                    // Verify file was created
+                    if (outputFile.exists()) {
+                        imagePath = "Images/" + uniqueFileName;
+                    } else {
+                        response.sendRedirect(request.getContextPath() + "/Admin/add_product.jsp?error=file_save_failed");
+                        return;
+                    }
+                    
+                } catch (Exception e) {
+                    System.err.println("Error during image upload: " + e.getMessage());
+                    e.printStackTrace();
+                    response.sendRedirect(request.getContextPath() + "/Admin/add_product.jsp?error=file_save_error");
+                    return;
+                }
+            }
+
+            // 3. Database insert
             String sql = "INSERT INTO products (name, category, price, sku, stock, supplier, image_path, status) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -172,19 +172,17 @@ public class AddProductServlet extends HttpServlet {
             ps.setString(4, sku);
             ps.setInt(5, stock);
             ps.setString(6, supplier);
-            ps.setString(7, imagePath);  // Store the (potentially renamed) relative path in the database
+            ps.setString(7, imagePath);
             ps.setString(8, status);
 
-            int result = ps.executeUpdate();  // Execute the SQL insert
+            int result = ps.executeUpdate();
             if (result > 0) {
-                System.out.println("Product added successfully.");
-                response.sendRedirect(request.getContextPath() + "/Admin/add_product.jsp?success=1"); // Redirect on success
+                response.sendRedirect(request.getContextPath() + "/Admin/add_product.jsp?success=true");
             } else {
-                 System.err.println("Failed to add product to database.");
-                 response.sendRedirect(request.getContextPath() + "/Admin/add_product.jsp?error=db_insert");  // Redirect on failure
+                response.sendRedirect(request.getContextPath() + "/Admin/add_product.jsp?error=db_error");
             }
 
-            ps.close(); // Close PreparedStatement
+            ps.close();
 
         } catch (SQLException e) {
             // Catch SQL specific errors
@@ -239,5 +237,16 @@ public class AddProductServlet extends HttpServlet {
     private String getSafeParam(HttpServletRequest request, String paramName) {
         String value = request.getParameter(paramName);
         return (value != null) ? value.trim() : ""; // Return trimmed value or empty string if null
+    }
+
+    private String getSubmittedFileName(Part part) {
+        String contentDisp = part.getHeader("content-disposition");
+        String[] tokens = contentDisp.split(";");
+        for (String token : tokens) {
+            if (token.trim().startsWith("filename")) {
+                return token.substring(token.indexOf("=") + 2, token.length() - 1);
+            }
+        }
+        return "";
     }
 }

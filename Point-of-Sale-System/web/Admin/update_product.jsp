@@ -13,197 +13,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Update Product</title>
-    <style>
-        :root {
-            --primary-color: #4361ee;
-            --primary-hover: #3a56d4;
-            --text-color: #333;
-            --secondary-text: #666;
-            --border-color: #e0e0e0;
-            --background: #f8f9fa;
-            --card-bg: #ffffff;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
-            background-color: var(--background);
-            color: var(--text-color);
-            line-height: 1.6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            flex-direction: column;
-        }
-
-        .header {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: var(--text-color);
-            text-align: center;
-        }
-
-        .pos-container {
-            background-color: var(--card-bg);
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-            width: 100%;
-            max-width: 650px;
-            transition: all 0.3s ease;
-        }
-
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .back-button {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            color: var(--secondary-text);
-            font-weight: 500;
-            font-size: 16px;
-            transition: all 0.2s ease;
-            padding: 8px 12px;
-            border-radius: 6px;
-        }
-
-        .back-button:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-            color: var(--primary-color);
-        }
-
-        .back-button svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        .form-title {
-            font-size: 24px;
-            font-weight: 600;
-        }
-
-        .input-group {
-            margin-bottom: 24px;
-        }
-
-        label {
-            display: block;
-            font-size: 16px;
-            font-weight: 500;
-            color: var(--secondary-text);
-            margin-bottom: 8px;
-        }
-
-        input, textarea, select {
-            width: 100%;
-            padding: 14px 16px;
-            font-size: 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background-color: var(--card-bg);
-            color: var(--text-color);
-            transition: all 0.2s ease;
-        }
-
-        input[type="file"] {
-            padding: 10px;
-            background-color: var(--background);
-            cursor: pointer;
-        }
-
-        select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 16px center;
-            background-size: 16px;
-            padding-right: 40px;
-        }
-
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
-        }
-
-        .btn-container {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .btn {
-            font-size: 16px;
-            font-weight: 600;
-            padding: 14px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            flex: 1;
-            text-align: center;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
-        }
-
-        .success-message {
-            background-color: var(--success);
-            color: white;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .error-message {
-            background-color: var(--danger);
-            color: white;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .pos-container {
-                padding: 30px 20px;
-            }
-            
-            .header {
-                font-size: 24px;
-            }
-            
-            .form-title {
-                font-size: 20px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/Admin/styles.css">
 </head>
 <body>
     <%
@@ -276,141 +86,191 @@
         }
     %>
 
-    <div class="pos-container">
-        <div class="top-bar">
-            <a href="products.jsp" class="back-button">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                Back to Products
-            </a>
-            <div class="form-title">Update Product</div>
+    <div class="dashboard">
+        <div class="sidebar" id="sidebar">
+            <div class="logo">
+                <img src="${pageContext.request.contextPath}/Images/logo.png" alt="POS Logo">
+                <h2>Swift</h2>
+            </div>
+            <jsp:include page="menu.jsp" />
         </div>
-        
-        <% if (request.getParameter("success") != null) { %>
-            <div class="success-message" style="display: block;">
-                Product updated successfully!
-            </div>
-        <% } %>
-        
-        <% if (request.getParameter("error") != null) { %>
-            <div class="error-message" style="display: block;">
-                Error: <%= request.getParameter("error").equals("db_error") ? "Database error occurred" : 
-                          request.getParameter("error").equals("file_upload") ? "File upload error" : 
-                          "An unexpected error occurred" %>
-            </div>
-        <% } %>
-        
-        <form action="/Point-of-Sale-System/updateProduct" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="product_id" value="<%= productId %>">
-            
-            <div class="input-group">
-                <label for="product_name">Product Name</label>
-                <input type="text" id="product_name" name="product_name" value="<%= productName %>" placeholder="Enter product name" required>
+
+        <div class="main-content">
+            <div class="header">
+                <h1 class="page-title">Update Product</h1>
+                <div class="user-profile">
+                    <img src="${pageContext.request.contextPath}/Images/logo.png" alt="Admin Profile">
+                    <div>
+                        <h4>Admin User</h4>
+                    </div>
+                </div>
             </div>
 
-            <div class="input-group">
-                <label for="product_category">Category</label>
-                <select id="product_category" name="product_category" required>
-                    <option value="">Select Category</option>
-                    <option value="Coffee" <%= productCategory.equals("Coffee") ? "selected" : "" %>>Coffee</option>
-                    <option value="Tea" <%= productCategory.equals("Tea") ? "selected" : "" %>>Tea</option>
-                    <option value="Pastries" <%= productCategory.equals("Pastries") ? "selected" : "" %>>Pastries</option>
-                    <option value="Sandwiches" <%= productCategory.equals("Sandwiches") ? "selected" : "" %>>Sandwiches</option>
-                    <option value="Accessories" <%= productCategory.equals("Accessories") ? "selected" : "" %>>Accessories</option>
-                    <option value="Dairy" <%= productCategory.equals("Dairy") ? "selected" : "" %>>Dairy</option>
-                    <option value="Syrups" <%= productCategory.equals("Syrups") ? "selected" : "" %>>Syrups</option>
-                    <option value="Supplies" <%= productCategory.equals("Supplies") ? "selected" : "" %>>Supplies</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-<<<<<<< HEAD
-                <label for="product_price">Price (Rs.)</label>
-=======
-                <label for="product_price">Price ($)</label>
->>>>>>> 47948b02a47d0199b7ad57f516ad17bc4922d6dd
-                <input type="number" id="product_price" name="product_price" value="<%= productPrice %>" placeholder="0.00" step="0.01" min="0" required>
-            </div>
-
-            <div class="input-group">
-                <label for="product_sku">SKU</label>
-                <input type="text" id="product_sku" name="product_sku" value="<%= productSku %>" placeholder="Enter product SKU"
-                       pattern="[A-Z0-9!@#$%^&*()_+\-=\[\]{};':&quot;\\|,.<>\/?]*"
-                       title="Only capital letters, numbers, and symbols are allowed"
-                       oninput="this.value = this.value.toUpperCase();"
-                       required>
-            </div>
-
-            <div class="input-group">
-                <label for="product_stock">Stock</label>
-                <input type="number" id="product_stock" name="product_stock" value="<%= productStock %>" placeholder="0" step="1" min="0" required>
-            </div>
-
-            <div class="input-group">
-                <label for="product_supplier">Supplier</label>
-                <select id="product_supplier" name="product_supplier" required>
-                    <option value="">Select Supplier</option>
-                    <option value="Coffee" <%= productSupplier.equals("Coffee") ? "selected" : "" %>>Coffee</option>
-                    <option value="Tea" <%= productSupplier.equals("Tea") ? "selected" : "" %>>Tea</option>
-                    <option value="Pastries" <%= productSupplier.equals("Pastries") ? "selected" : "" %>>Pastries</option>
-                    <option value="Sandwiches" <%= productSupplier.equals("Sandwiches") ? "selected" : "" %>>Sandwiches</option>
-                    <option value="Accessories" <%= productSupplier.equals("Accessories") ? "selected" : "" %>>Accessories</option>
-                    <option value="Dairy" <%= productSupplier.equals("Dairy") ? "selected" : "" %>>Dairy</option>
-                    <option value="Syrups" <%= productSupplier.equals("Syrups") ? "selected" : "" %>>Syrups</option>
-                    <option value="Supplies" <%= productSupplier.equals("Supplies") ? "selected" : "" %>>Supplies</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label for="product_image">Product Image (leave empty to keep current image)</label>
-                <input type="file" id="product_image" name="product_image" accept="image/*">
-                <input type="hidden" name="current_image_path" value="<%= productImagePath %>">
-                <% if (productImagePath != null && !productImagePath.isEmpty()) { %>
-                    <p style="margin-top: 8px; font-size: 14px;">Current image: <%= productImagePath %></p>
+            <div class="product-form-container">
+                <% if (request.getParameter("success") != null) { %>
+                    <div class="product-success-message">
+                        Product updated successfully!
+                        <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'"></button>
+                    </div>
                 <% } %>
-            </div>
-            
-            <div class="input-group">
-                <label for="product_status">Status</label>
-                <select id="product_status" name="product_status" required>
-                    <option value="">Select Status</option>
-                    <option value="Active" <%= productStatus.equals("Active") ? "selected" : "" %>>Active</option>
-                    <option value="Low Stock" <%= productStatus.equals("Low Stock") ? "selected" : "" %>>Low Stock</option>
-                    <option value="Deactivate" <%= productStatus.equals("Deactivate") ? "selected" : "" %>>Deactivate</option>
-                </select>
+                
+                <% 
+                    String error = request.getParameter("error");
+                    if (error != null) {
+                        String errorMessage = "";
+                        switch(error) {
+                            case "upload_dir_failed":
+                                errorMessage = "Failed to create upload directory. Please try again.";
+                                break;
+                            case "file_save_failed":
+                                errorMessage = "Failed to save the image file. Please try again.";
+                                break;
+                            case "file_save_error":
+                                errorMessage = "Error occurred while saving the image. Please try again.";
+                                break;
+                            case "dir_not_writable":
+                                errorMessage = "Upload directory is not writable. Please contact administrator.";
+                                break;
+                            default:
+                                errorMessage = "An error occurred. Please try again.";
+                        }
+                %>
+                    <div class="error-message">
+                        <%= errorMessage %>
+                        <button type="button" class="close-btn" onclick="this.parentElement.style.display='none'"></button>
+                    </div>
+                <% } %>
+
+                <form action="${pageContext.request.contextPath}/updateProduct" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="product_id" value="<%= productId %>">
+                    <input type="hidden" name="current_image_path" value="<%= productImagePath %>">
+                    
+                    <div class="product-form-group">
+                        <label for="product_name">Product Name</label>
+                        <input type="text" id="product_name" name="product_name" value="<%= productName %>" required>
+                    </div>
+
+                    <div class="product-form-group">
+                        <label for="product_category">Category</label>
+                        <select id="product_category" name="product_category" required>
+                            <option value="">Select Category</option>
+                            <option value="Food" <%= productCategory.equals("Food") ? "selected" : "" %>>Food</option>
+                            <option value="Beverages" <%= productCategory.equals("Beverages") ? "selected" : "" %>>Beverages</option>
+                            <option value="Electronics" <%= productCategory.equals("Electronics") ? "selected" : "" %>>Electronics</option>
+                            <option value="Clothing" <%= productCategory.equals("Clothing") ? "selected" : "" %>>Clothing</option>
+                            <option value="Home Goods" <%= productCategory.equals("Home Goods") ? "selected" : "" %>>Home Goods</option>
+                            <option value="Books" <%= productCategory.equals("Books") ? "selected" : "" %>>Books</option>
+                            <option value="Stationery" <%= productCategory.equals("Stationery") ? "selected" : "" %>>Stationery</option>
+                            <option value="Accessories" <%= productCategory.equals("Accessories") ? "selected" : "" %>>Accessories</option>
+                        </select>
+                    </div>
+
+                    <div class="product-form-group">
+                        <label for="product_price">Price (Rs.)</label>
+                        <input type="number" id="product_price" name="product_price" value="<%= productPrice %>" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="product-form-group">
+                        <label for="product_sku">SKU</label>
+                        <input type="text" id="product_sku" name="product_sku" value="<%= productSku %>" 
+                               pattern="[A-Z0-9!@#$%^&*()_+\-=\[\]{};':&quot;\\|,.<>\/?]*"
+                               title="Only capital letters, numbers, and symbols are allowed"
+                               oninput="this.value = this.value.toUpperCase();"
+                               required>
+                        <small class="product-form-text">Only capital letters, numbers, and symbols are allowed</small>
+                    </div>
+
+                    <div class="product-form-group">
+                        <label for="product_stock">Stock</label>
+                        <input type="number" id="product_stock" name="product_stock" value="<%= productStock %>" min="0" required>
+                    </div>
+
+                    <div class="product-form-group">
+                        <label for="product_supplier">Supplier</label>
+                        <select id="product_supplier" name="product_supplier" required>
+                            <option value="">Select Supplier</option>
+                            <option value="Global Coffee Co." <%= productSupplier.equals("Global Coffee Co.") ? "selected" : "" %>>Global Coffee Co.</option>
+                            <option value="Dairy Farms Inc." <%= productSupplier.equals("Dairy Farms Inc.") ? "selected" : "" %>>Dairy Farms Inc.</option>
+                            <option value="Sweet Supplies Ltd." <%= productSupplier.equals("Sweet Supplies Ltd.") ? "selected" : "" %>>Sweet Supplies Ltd.</option>
+                            <option value="Package Solutions" <%= productSupplier.equals("Package Solutions") ? "selected" : "" %>>Package Solutions</option>
+                            <option value="Flavor Masters" <%= productSupplier.equals("Flavor Masters") ? "selected" : "" %>>Flavor Masters</option>
+                            <option value="Tea Suppliers" <%= productSupplier.equals("Tea Suppliers") ? "selected" : "" %>>Tea Suppliers</option>
+                            <option value="Pastry Partners" <%= productSupplier.equals("Pastry Partners") ? "selected" : "" %>>Pastry Partners</option>
+                            <option value="Sandwich Supplies" <%= productSupplier.equals("Sandwich Supplies") ? "selected" : "" %>>Sandwich Supplies</option>
+                            <option value="Accessory World" <%= productSupplier.equals("Accessory World") ? "selected" : "" %>>Accessory World</option>
+                        </select>
+                    </div>
+
+                    <div class="product-form-group">
+                        <label for="product_status">Status</label>
+                        <select id="product_status" name="product_status" required>
+                            <option value="Active" <%= productStatus.equals("Active") ? "selected" : "" %>>Active</option>
+                            <option value="Inactive" <%= productStatus.equals("Inactive") ? "selected" : "" %>>Inactive</option>
+                            <option value="Out of Stock" <%= productStatus.equals("Out of Stock") ? "selected" : "" %>>Out of Stock</option>
+                        </select>
+                    </div>
+
+                    <div class="product-form-group">
+                        <label for="productImage">Product Image</label>
+                        <input type="file" id="productImage" name="productImage" accept="image/*" onchange="previewImage(this)">
+                        <small class="product-form-text">Max file size: 5MB. Supported formats: JPG, PNG, GIF</small>
+                        <div class="product-image-preview" id="imagePreview">
+                            <img src="${pageContext.request.contextPath}/<%= productImagePath %>" alt="Product Image Preview" id="preview">
+                        </div>
+                    </div>
+
+                    <div class="product-form-actions">
+                        <button type="submit" class="product-btn-primary">Update Product</button>
+                        <button type="button" class="product-btn-secondary" onclick="window.location.href='${pageContext.request.contextPath}/Admin/products.jsp'">Cancel</button>
+                    </div>
+                </form>
             </div>
 
-            <div class="btn-container">
-                <button type="submit" class="btn btn-primary">Update Product</button>
+            <div class="footer">
+                Swift © 2025.
             </div>
-        </form>
+        </div>
     </div>
-    
+
     <script>
-        // Fade out success/error messages after 5 seconds
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                const successMessage = document.querySelector('.success-message');
-                const errorMessage = document.querySelector('.error-message');
-                
-                if (successMessage && successMessage.style.display === 'block') {
-                    successMessage.style.opacity = '0';
-                    successMessage.style.transition = 'opacity 0.5s ease';
-                    setTimeout(function() {
-                        successMessage.style.display = 'none';
-                    }, 500);
+        function previewImage(input) {
+            const preview = document.getElementById('preview');
+            const file = input.files[0];
+            
+            if (file) {
+                // Check file size (5MB limit)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB');
+                    input.value = '';
+                    return;
                 }
-                
-                if (errorMessage && errorMessage.style.display === 'block') {
-                    errorMessage.style.opacity = '0';
-                    errorMessage.style.transition = 'opacity 0.5s ease';
-                    setTimeout(function() {
-                        errorMessage.style.display = 'none';
-                    }, 500);
+
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select an image file');
+                    input.value = '';
+                    return;
                 }
-            }, 5000);
-        });
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = '${pageContext.request.contextPath}/<%= productImagePath %>';
+            }
+        }
+
+        // Mobile navigation toggle
+        const mobileNavToggle = document.getElementById('mobileNavToggle');
+        const sidebar = document.getElementById('sidebar');
+
+        if (mobileNavToggle && sidebar) {
+            mobileNavToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+        }
     </script>
 </body>
 </html>

@@ -699,11 +699,7 @@
                                 </td>
                                 <td><%= product.getSku() != null ? product.getSku() : "N/A" %></td> <%-- Display SKU --%>
                                 <td><%= product.getCategory() != null ? product.getCategory() : "N/A" %></td> <%-- Display Category --%>
-<<<<<<< HEAD
                                 <td>Rs.<%= df.format(product.getPrice()) %></td> <%-- Display formatted Price --%>
-=======
-                                <td>$<%= df.format(product.getPrice()) %></td> <%-- Display formatted Price --%>
->>>>>>> 47948b02a47d0199b7ad57f516ad17bc4922d6dd
                                 <td>
                                     <%
                                         String stockClass = "low"; // Default to low
@@ -732,7 +728,7 @@
                                 <td>
                                     <div class="row-actions">
                                         <%-- Edit Button (Link to edit page with product ID) --%>
-                                        <button class="action-button edit" onclick="window.location.href='<%= request.getContextPath() %>/Admin/update_product.jsp?id=<%= product.getId() %>'">
+                                        <button class="action-button edit" onclick="window.location.href='<%= request.getContextPath() %>/Admin/update_product.jsp?id=<%= product.getId() %>&oldImagePath=<%= product.getImagePath() %>'">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
