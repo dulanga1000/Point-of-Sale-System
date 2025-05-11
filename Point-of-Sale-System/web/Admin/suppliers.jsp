@@ -372,7 +372,7 @@
             Supplier Actions
           </div>
           <div class="module-content">
-            <div class="module-action">
+            <div class="module-action" data-page="add_supplier.jsp">
               <div class="action-icon">➕</div>
               <div class="action-text">
                 <h4>Add New Supplier</h4>
@@ -380,7 +380,7 @@
               </div>
             </div>
             
-            <div class="module-action">
+            <div class="module-action" data-page="purchases.jsp">
               <div class="action-icon">🔄</div>
               <div class="action-text">
                 <h4>Create Purchase Order</h4>
@@ -388,7 +388,7 @@
               </div>
             </div>
             
-            <div class="module-action">
+            <div class="module-action" data-page="supplier_reports.jsp">
               <div class="action-icon">📊</div>
               <div class="action-text">
                 <h4>Supplier Reports</h4>
@@ -396,7 +396,7 @@
               </div>
             </div>
             
-            <div class="module-action">
+            <div class="module-action" data-page="products_by_supplier.jsp">
               <div class="action-icon">🔍</div>
               <div class="action-text">
                 <h4>Find Products by Supplier</h4>
@@ -487,7 +487,7 @@
                 <option value="inactive">Inactive</option>
               </select>
             </div>
-            <button class="add-supplier-btn">
+            <button class="add-supplier-btn" data-page="add_supplier.jsp">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -711,10 +711,26 @@
       document.getElementById('sidebar').classList.toggle('active');
     });
     
+    // Navigation via JavaScript for module actions
+    document.querySelectorAll('.module-action').forEach(action => {
+      action.addEventListener('click', function() {
+        const targetPage = this.getAttribute('data-page');
+        if (targetPage) {
+          window.location.href = targetPage;
+        }
+      });
+    });
+    
     // Add some interactivity for demonstration
-    document.querySelectorAll('.add-supplier-btn, .module-action, .action-btn').forEach(button => {
+    document.querySelectorAll('.add-supplier-btn, .action-btn').forEach(button => {
       button.addEventListener('click', function() {
-        alert('This feature would be implemented with actual functionality in the full application.');
+         window.location.href = 'add_supplier.jsp';
+      });
+    });
+    
+    document.querySelectorAll('.edit-btn, .action-btn').forEach(button => {
+      button.addEventListener('click', function() {
+         window.location.href = 'edit_supplier.jsp';
       });
     });
     
