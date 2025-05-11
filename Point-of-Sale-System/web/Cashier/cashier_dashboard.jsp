@@ -101,8 +101,10 @@
                     <span>Settings</span>
                 </li>
                 <li class="menu-item">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+                    <a href="${pageContext.request.contextPath}/logoutAction" style="text-decoration: none; color: inherit;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
                 </li>
             </ul>
         </div>

@@ -24,9 +24,10 @@
         </li>
         <li class="menu-item">
           <a href="products.jsp" style="text-decoration: none; color: inherit;">
-          <i>📦</i> Products
+            <i>📦</i> Products
           </a>
         </li>
+
         <li class="menu-item">
           <i>🏭</i> Suppliers
         </li>
@@ -40,7 +41,8 @@
           <i>⚙️</i> Settings
         </li>        
         <li class="menu-item">
-          <i>↩️️</i> Logout
+            <a href="${pageContext.request.contextPath}/logoutAction" style="text-decoration: none; color: inherit;">
+          <i>↩️️</i><a>Logout</a>
         </li>        
       </ul>
     </body>
