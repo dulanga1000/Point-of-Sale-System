@@ -29,6 +29,7 @@
         </li>
 
         <li class="menu-item">
+            <a href="suppliers.jsp" style="text-decoration: none; color: inherit;">
           <i>🏭</i> Suppliers
         </li>
         <li class="menu-item">
