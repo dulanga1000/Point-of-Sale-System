@@ -1,8 +1,9 @@
-<%--
+<%-- 
     Document   : products
-    Created on : May 5, 2025, 8:04:51 PM
+    Created on : May 16, 2025, 9:26:53 AM
     Author     : dulan
 --%>
+
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.List" %>
 <%@ page import="model.Product" %>

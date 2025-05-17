@@ -1,8 +1,9 @@
 <%-- 
     Document   : receipt
-    Created on : May 5, 2025, 4:34:42 PM
+    Created on : May 16, 2025, 9:30:00 AM
     Author     : dulan
 --%>
+
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ page import="java.util.*, java.text.*" %>
 <!DOCTYPE html>

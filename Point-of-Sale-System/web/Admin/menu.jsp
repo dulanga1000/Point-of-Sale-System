@@ -1,6 +1,6 @@
 <%-- 
     Document   : menu
-    Created on : May 5, 2025, 8:51:15 PM
+    Created on : May 16, 2025, 9:26:41 AM
     Author     : dulan
 --%>
 
@@ -36,6 +36,7 @@
           <i>📈</i> Sales Reports
         </li>
         <li class="menu-item">
+            <a href="inventory.jsp" style="text-decoration: none; color: inherit;">
           <i>📋</i> Inventory
         </li>
         <li class="menu-item">

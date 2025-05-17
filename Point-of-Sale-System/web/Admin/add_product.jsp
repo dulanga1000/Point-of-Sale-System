@@ -1,7 +1,7 @@
 <%-- 
     Document   : add_product
-    Created on : May 5, 2025, 8:34:17 PM
-    Author     : User
+    Created on : May 16, 2025, 9:25:47 AM
+    Author     : dulan
 --%>
 
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>

@@ -1,10 +1,14 @@
 <%-- 
-    Document   : suppliers.jsp
-    Created on : May 11, 2025, 1:08:56 PM
+    Document   : suppliers
+    Created on : May 16, 2025, 9:27:45 AM
     Author     : dulan
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ page import="java.sql.*" %>
+<%@ page import="java.util.*" %>
+<%@ page import="java.time.LocalTime" %>
+<%@ page import="java.time.format.DateTimeFormatter" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -510,90 +514,38 @@
               </tr>
             </thead>
             <tbody>
+                <%
+    String URL = "jdbc:mysql://localhost:3306/Swift_Database";
+    String USER = "root";
+    String PASSWORD = "";
+
+    try {
+        Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        PreparedStatement sql = conn.prepareStatement("SELECT * FROM suppliers");
+        ResultSet result = sql.executeQuery();
+
+        while (result.next()) { %>
               <tr>
-                <td>#SUP-001</td>
-                <td>Global Coffee Co.</td>
-                <td>Beverages</td>
-                <td>John Smith</td>
-                <td>+94 75 123 4567</td>
-                <td>May 8, 2025</td>
-                <td><span class="status completed">Active</span></td>
+                <td><%= result.getString("supplier_id") %></td>
+                <td><%= result.getString("company_name") %></td>
+                <td><%= result.getString("category") %></td>
+                <td><%= result.getString("contact_person") %></td>
+                <td><%= result.getString("contact_phone") %></td>
+                <td><%= result.getString("lead_time") %></td>
+                <td><span class="status completed"><%= result.getString("supplier_status") %></span></td>
                 <td class="action-buttons">
                   <button class="action-btn edit-btn" title="Edit">✏️</button>
                   <button class="action-btn view-btn" title="View Details">👁️</button>
                   <button class="action-btn order-btn" title="Place Order">🛒</button>
                 </td>
               </tr>
-              <tr>
-                <td>#SUP-002</td>
-                <td>Dairy Farms Inc.</td>
-                <td>Dairy</td>
-                <td>Sarah Wilson</td>
-                <td>+94 77 234 5678</td>
-                <td>May 7, 2025</td>
-                <td><span class="status completed">Active</span></td>
-                <td class="action-buttons">
-                  <button class="action-btn edit-btn" title="Edit">✏️</button>
-                  <button class="action-btn view-btn" title="View Details">👁️</button>
-                  <button class="action-btn order-btn" title="Place Order">🛒</button>
-                </td>
-              </tr>
-              <tr>
-                <td>#SUP-003</td>
-                <td>Sweet Supplies Ltd.</td>
-                <td>Ingredients</td>
-                <td>Michael Brown</td>
-                <td>+94 76 345 6789</td>
-                <td>May 3, 2025</td>
-                <td><span class="status completed">Active</span></td>
-                <td class="action-buttons">
-                  <button class="action-btn edit-btn" title="Edit">✏️</button>
-                  <button class="action-btn view-btn" title="View Details">👁️</button>
-                  <button class="action-btn order-btn" title="Place Order">🛒</button>
-                </td>
-              </tr>
-              <tr>
-                <td>#SUP-004</td>
-                <td>Package Solutions</td>
-                <td>Packaging</td>
-                <td>Emma Johnson</td>
-                <td>+94 71 456 7890</td>
-                <td>May 1, 2025</td>
-                <td><span class="status completed">Active</span></td>
-                <td class="action-buttons">
-                  <button class="action-btn edit-btn" title="Edit">✏️</button>
-                  <button class="action-btn view-btn" title="View Details">👁️</button>
-                  <button class="action-btn order-btn" title="Place Order">🛒</button>
-                </td>
-              </tr>
-              <tr>
-                <td>#SUP-005</td>
-                <td>Flavor Masters</td>
-                <td>Ingredients</td>
-                <td>David Lee</td>
-                <td>+94 78 567 8901</td>
-                <td>Apr 28, 2025</td>
-                <td><span class="status completed">Active</span></td>
-                <td class="action-buttons">
-                  <button class="action-btn edit-btn" title="Edit">✏️</button>
-                  <button class="action-btn view-btn" title="View Details">👁️</button>
-                  <button class="action-btn order-btn" title="Place Order">🛒</button>
-                </td>
-              </tr>
-              <tr>
-                <td>#SUP-006</td>
-                <td>Ceylon Teas</td>
-                <td>Beverages</td>
-                <td>Priya Sharma</td>
-                <td>+94 70 678 9012</td>
-                <td>Apr 25, 2025</td>
-                <td><span class="status pending">Inactive</span></td>
-                <td class="action-buttons">
-                  <button class="action-btn edit-btn" title="Edit">✏️</button>
-                  <button class="action-btn view-btn" title="View Details">👁️</button>
-                  <button class="action-btn order-btn" title="Place Order">🛒</button>
-                </td>
-              </tr>
+              <% }
+        conn.close();
+    } catch (Exception ex) {
+        out.println("<p class='text-danger text-center'>Error: " + ex.getMessage() + "</p>");
+    }
+%>
+              
             </tbody>
           </table>
           
@@ -725,12 +677,6 @@
     document.querySelectorAll('.add-supplier-btn, .action-btn').forEach(button => {
       button.addEventListener('click', function() {
          window.location.href = 'add_supplier.jsp';
-      });
-    });
-    
-    document.querySelectorAll('.edit-btn, .action-btn').forEach(button => {
-      button.addEventListener('click', function() {
-         window.location.href = 'edit_supplier.jsp';
       });
     });
     

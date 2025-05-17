@@ -1,8 +1,9 @@
 <%-- 
     Document   : cashier_dashboard
-    Created on : May 4, 2025, 4:20:32 AM
+    Created on : May 16, 2025, 9:29:20 AM
     Author     : dulan
 --%>
+
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.ArrayList" %>
