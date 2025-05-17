@@ -1,6 +1,6 @@
 <%-- 
-    Document   : supplier_reports
-    Created on : May 16, 2025, 11:33:50 PM
+    Document   : sales_report
+    Created on : May 17, 2025, 10:15:22 AM
     Author     : dulan
 --%>
 
@@ -10,224 +10,217 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Supplier Reports - Swift POS</title>
+  <title>Sales Reports</title>
   <script src="script.js"></script>
   <link rel="Stylesheet" href="styles.css">
   <style>
-    /* Additional styles for the supplier reports */
+    /* Additional styles specific to sales reports */
     .report-filters {
       display: flex;
       gap: 15px;
-      margin-bottom: 20px;
       flex-wrap: wrap;
+      margin-bottom: 20px;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
     
-    .filter-group {
+    .filter-item {
       display: flex;
       flex-direction: column;
-      min-width: 180px;
+      min-width: 200px;
     }
     
-    .filter-group label {
-      font-size: 13px;
-      color: var(--secondary);
+    .filter-item label {
+      font-size: 14px;
       margin-bottom: 5px;
+      color: var(--secondary);
     }
     
-    .filter-input {
-      padding: 10px;
+    .filter-item select,
+    .filter-item input {
+      padding: 8px;
       border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      background-color: #f8fafc;
+      border-radius: 4px;
     }
     
-    .report-actions {
+    .filter-buttons {
       display: flex;
+      align-items: flex-end;
       gap: 10px;
-      margin-bottom: 20px;
     }
     
-    .report-btn {
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-weight: 500;
-      cursor: pointer;
+    .btn {
+      padding: 8px 16px;
       border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
     }
     
-    .primary-btn {
+    .btn-primary {
       background-color: var(--primary);
       color: white;
     }
     
-    .secondary-btn {
-      background-color: #f1f5f9;
-      color: var(--dark);
-      border: 1px solid #e2e8f0;
+    .btn-outline {
+      background-color: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
     }
     
     .report-summary {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
+      gap: 15px;
       margin-bottom: 20px;
     }
     
     .summary-card {
       background-color: white;
-      padding: 15px;
       border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
     
     .summary-title {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--secondary);
-      margin-bottom: 8px;
+      margin-bottom: 5px;
     }
     
     .summary-value {
-      font-size: 20px;
+      font-size: 24px;
       font-weight: 600;
     }
     
-    .performance-trend {
-      margin-top: 5px;
+    .summary-change {
       font-size: 12px;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-    }
-    
-    .trend-up {
-      color: var(--success);
-    }
-    
-    .trend-down {
-      color: var(--danger);
-    }
-    
-    .report-tab-container {
-      margin-bottom: 20px;
-    }
-    
-    .report-tabs {
-      display: flex;
-      border-bottom: 1px solid #e2e8f0;
-      margin-bottom: 15px;
-    }
-    
-    .report-tab {
-      padding: 10px 20px;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-    
-    .report-tab.active {
-      border-bottom-color: var(--primary);
-      color: var(--primary);
-    }
-    
-    .report-tab:hover:not(.active) {
-      background-color: #f8fafc;
-      border-bottom-color: #e2e8f0;
-    }
-    
-    .report-content {
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-      padding: 20px;
-      margin-bottom: 20px;
+      margin-top: 5px;
     }
     
     .chart-container {
-      width: 100%;
-      height: 300px;
-      margin: 20px 0;
-      background-color: #f8fafc;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    @media (max-width: 992px) {
+      .chart-container {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .chart-card {
+      background-color: white;
       border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-style: italic;
-      color: var(--secondary);
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
     
-    .report-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    
-    .report-table th,
-    .report-table td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid #f1f5f9;
-    }
-    
-    .report-table th {
-      background-color: #f8fafc;
-      font-weight: 500;
-      color: var(--secondary);
-    }
-    
-    .report-footer {
+    .chart-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-top: 15px;
-      border-top: 1px solid #f1f5f9;
-      margin-top: 20px;
+      margin-bottom: 15px;
     }
     
-    .report-info {
-      font-size: 13px;
-      color: var(--secondary);
+    .chart-title {
+      font-size: 16px;
+      font-weight: 600;
     }
     
-    .report-actions-footer {
+    .chart-filters {
       display: flex;
       gap: 10px;
     }
     
-    .quality-indicator {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      display: inline-block;
+    .chart-filter {
+      background-color: #f1f5f9;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .chart-filter.active {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .chart {
+      height: 300px;
+      width: 100%;
+      position: relative;
+      margin-top: 10px;
+    }
+    
+    .chart-placeholder {
+      width: 100%;
+      height: 100%;
+      background-color: #f8fafc;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--secondary);
+    }
+    
+    .top-products {
+      height: 100%;
+      overflow-y: auto;
+    }
+    
+    .product-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .product-info {
+      flex: 1;
+    }
+    
+    .product-name {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    
+    .product-sales {
+      font-size: 12px;
+      color: var(--secondary);
+    }
+    
+    .product-percentage {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .report-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .report-option {
+      display: flex;
+      align-items: center;
+      padding: 5px 10px;
+      background-color: white;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    .report-option i {
       margin-right: 5px;
-    }
-    
-    .quality-excellent {
-      background-color: var(--success);
-    }
-    
-    .quality-good {
-      background-color: #22c55e;
-    }
-    
-    .quality-average {
-      background-color: var(--warning);
-    }
-    
-    .quality-poor {
-      background-color: var(--danger);
-    }
-    
-    @media (max-width: 768px) {
-      .report-filters,
-      .report-actions {
-        flex-direction: column;
-      }
-      
-      .filter-group,
-      .report-btn {
-        width: 100%;
-      }
+      font-size: 16px;
     }
   </style>
 </head>
@@ -254,7 +247,7 @@
     <!-- Main Content -->
     <div class="main-content">
       <div class="header">
-        <h1 class="page-title">Supplier Reports</h1>
+        <h1 class="page-title">Sales Reports</h1>
         <div class="user-profile">
           <img src="../Images/logo.png" alt="Admin Profile">
           <div>
@@ -264,307 +257,299 @@
       </div>
       
       <!-- Report Filters -->
-      <div class="module-card">
-        <div class="module-header">
-          Report Parameters
+      <div class="report-filters">
+        <div class="filter-item">
+          <label for="report-type">Report Type</label>
+          <select id="report-type">
+            <option value="daily">Daily Sales</option>
+            <option value="weekly">Weekly Sales</option>
+            <option value="monthly" selected>Monthly Sales</option>
+            <option value="yearly">Yearly Sales</option>
+          </select>
         </div>
-        <div class="module-content">
-          <div class="report-filters">
-            <div class="filter-group">
-              <label>Supplier</label>
-              <select class="filter-input">
-                <option value="all">All Suppliers</option>
-                <option value="global">Global Coffee Co.</option>
-                <option value="dairy">Dairy Farms Inc.</option>
-                <option value="sweet">Sweet Supplies Ltd.</option>
-                <option value="package">Package Solutions</option>
-                <option value="flavor">Flavor Masters</option>
-                <option value="ceylon">Ceylon Teas</option>
-              </select>
-            </div>
-            
-            <div class="filter-group">
-              <label>Date Range</label>
-              <select class="filter-input">
-                <option value="last30">Last 30 Days</option>
-                <option value="last90">Last 90 Days</option>
-                <option value="last6m">Last 6 Months</option>
-                <option value="lastyear">Last Year</option>
-                <option value="custom">Custom Range</option>
-              </select>
-            </div>
-            
-            <div class="filter-group">
-              <label>Report Type</label>
-              <select class="filter-input">
-                <option value="performance">Performance Analysis</option>
-                <option value="orders">Order History</option>
-                <option value="quality">Quality Assessment</option>
-                <option value="financial">Financial Summary</option>
-              </select>
-            </div>
-            
-            <div class="filter-group">
-              <label>Category</label>
-              <select class="filter-input">
-                <option value="all">All Categories</option>
-                <option value="beverages">Beverages</option>
-                <option value="dairy">Dairy</option>
-                <option value="packaging">Packaging</option>
-                <option value="ingredients">Ingredients</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="report-actions">
-            <button class="report-btn primary-btn">Generate Report</button>
-            <button class="report-btn secondary-btn">Reset Filters</button>
-            <button class="report-btn secondary-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              Export Report
-            </button>
-          </div>
+        
+        <div class="filter-item">
+          <label for="date-range">Date Range</label>
+          <select id="date-range">
+            <option value="this-month">This Month</option>
+            <option value="last-month">Last Month</option>
+            <option value="last-3-months">Last 3 Months</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+        
+        <div class="filter-item">
+          <label for="start-date">Start Date</label>
+          <input type="date" id="start-date" value="2025-04-01">
+        </div>
+        
+        <div class="filter-item">
+          <label for="end-date">End Date</label>
+          <input type="date" id="end-date" value="2025-04-30">
+        </div>
+        
+        <div class="filter-item">
+          <label for="cashier">Cashier</label>
+          <select id="cashier">
+            <option value="all">All Cashiers</option>
+            <option value="1">John Doe</option>
+            <option value="2">Emma Wilson</option>
+            <option value="3">Michael Brown</option>
+            <option value="4">Sarah Johnson</option>
+          </select>
+        </div>
+        
+        <div class="filter-buttons">
+          <button class="btn btn-primary">Generate Report</button>
+          <button class="btn btn-outline">Reset Filters</button>
+        </div>
+      </div>
+      
+      <!-- Report Actions -->
+      <div class="report-actions">
+        <div class="report-option">
+          <i>📊</i> View as Chart
+        </div>
+        <div class="report-option">
+          <i>📋</i> View as Table
+        </div>
+        <div class="report-option">
+          <i>📄</i> Export PDF
+        </div>
+        <div class="report-option">
+          <i>📊</i> Export Excel
         </div>
       </div>
       
       <!-- Report Summary -->
       <div class="report-summary">
         <div class="summary-card">
+          <div class="summary-title">TOTAL SALES</div>
+          <div class="summary-value">Rs.42,085</div>
+          <div class="summary-change trend up">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+            8.2% from last month
+          </div>
+        </div>
+        
+        <div class="summary-card">
           <div class="summary-title">TOTAL ORDERS</div>
-          <div class="summary-value">127</div>
-          <div class="performance-trend trend-up">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div class="summary-value">386</div>
+          <div class="summary-change trend up">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="18 15 12 9 6 15"></polyline>
             </svg>
-            12% vs. previous period
+            12.4% from last month
           </div>
         </div>
         
         <div class="summary-card">
-          <div class="summary-title">TOTAL SPENDING</div>
-          <div class="summary-value">Rs.286,450</div>
-          <div class="performance-trend trend-up">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="18 15 12 9 6 15"></polyline>
-            </svg>
-            8.5% vs. previous period
-          </div>
-        </div>
-        
-        <div class="summary-card">
-          <div class="summary-title">AVG. DELIVERY TIME</div>
-          <div class="summary-value">4.2 Days</div>
-          <div class="performance-trend trend-down">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div class="summary-title">AVERAGE ORDER VALUE</div>
+          <div class="summary-value">Rs.109</div>
+          <div class="summary-change trend down">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
-            0.3 days improvement
+            3.8% from last month
           </div>
         </div>
         
         <div class="summary-card">
-          <div class="summary-title">QUALITY SCORE</div>
-          <div class="summary-value">94%</div>
-          <div class="performance-trend trend-up">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="18 15 12 9 6 15"></polyline>
-            </svg>
-            2.1% improvement
-          </div>
+          <div class="summary-title">BEST SELLING DAY</div>
+          <div class="summary-value">Saturday</div>
+          <div class="summary-change">Rs.7,654 in sales</div>
         </div>
       </div>
       
-      <!-- Report Tabs -->
-      <div class="report-tab-container">
-        <div class="report-tabs">
-          <div class="report-tab active">Performance Analysis</div>
-          <div class="report-tab">Order History</div>
-          <div class="report-tab">Quality Assessment</div>
-          <div class="report-tab">Financial Summary</div>
-        </div>
-      </div>
-      
-      <!-- Report Content -->
-      <div class="report-content">
-        <h3>Supplier Performance Analysis</h3>
-        <p>Showing data for all suppliers from Apr 11, 2025 - May 11, 2025</p>
-        
-        <div class="chart-container">
-          [Performance Chart Visualization]
-        </div>
-        
-        <table class="report-table">
-          <thead>
-            <tr>
-              <th>Supplier</th>
-              <th>Category</th>
-              <th>Orders</th>
-              <th>On-Time %</th>
-              <th>Avg. Delivery (Days)</th>
-              <th>Quality</th>
-              <th>Overall Rating</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Global Coffee Co.</td>
-              <td>Beverages</td>
-              <td>32</td>
-              <td>98%</td>
-              <td>3.2</td>
-              <td><span class="quality-indicator quality-excellent"></span> Excellent</td>
-              <td>5.0</td>
-            </tr>
-            <tr>
-              <td>Dairy Farms Inc.</td>
-              <td>Dairy</td>
-              <td>45</td>
-              <td>95%</td>
-              <td>2.8</td>
-              <td><span class="quality-indicator quality-excellent"></span> Excellent</td>
-              <td>4.8</td>
-            </tr>
-            <tr>
-              <td>Sweet Supplies Ltd.</td>
-              <td>Ingredients</td>
-              <td>18</td>
-              <td>89%</td>
-              <td>4.5</td>
-              <td><span class="quality-indicator quality-good"></span> Good</td>
-              <td>4.2</td>
-            </tr>
-            <tr>
-              <td>Package Solutions</td>
-              <td>Packaging</td>
-              <td>23</td>
-              <td>92%</td>
-              <td>3.7</td>
-              <td><span class="quality-indicator quality-good"></span> Good</td>
-              <td>4.3</td>
-            </tr>
-            <tr>
-              <td>Flavor Masters</td>
-              <td>Ingredients</td>
-              <td>9</td>
-              <td>88%</td>
-              <td>5.1</td>
-              <td><span class="quality-indicator quality-average"></span> Average</td>
-              <td>3.8</td>
-            </tr>
-            <tr>
-              <td>Ceylon Teas</td>
-              <td>Beverages</td>
-              <td>0</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <div class="report-footer">
-          <div class="report-info">
-            Report generated on May 11, 2025 at 2:30 PM
-          </div>
-          <div class="report-actions-footer">
-            <button class="report-btn secondary-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              Export as PDF
-            </button>
-            <button class="report-btn secondary-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              Export as Excel
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Performance Metrics -->
-      <div class="module-card">
-        <div class="module-header">
-          Key Performance Indicators
-        </div>
-        <div class="module-content">
-          <div class="chart-container">
-            [KPI Comparison Chart]
-          </div>
-          
-          <div class="report-tab-container">
-            <div class="report-tabs">
-              <div class="report-tab active">On-Time Delivery</div>
-              <div class="report-tab">Quality Consistency</div>
-              <div class="report-tab">Price Stability</div>
-              <div class="report-tab">Response Time</div>
+      <!-- Charts -->
+      <div class="chart-container">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Sales Trend</div>
+            <div class="chart-filters">
+              <button class="chart-filter">Day</button>
+              <button class="chart-filter active">Week</button>
+              <button class="chart-filter">Month</button>
             </div>
           </div>
-          
-          <table class="report-table">
+          <div class="chart">
+            <div class="chart-placeholder">
+              <img src="${pageContext.request.contextPath}/Images/sales-chart.png" alt="Sales Chart" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+          </div>
+        </div>
+        
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Top Selling Products</div>
+          </div>
+          <div class="top-products">
+            <div class="product-item">
+              <div class="product-info">
+                <div class="product-name">Premium Coffee Beans</div>
+                <div class="product-sales">124 units sold</div>
+              </div>
+              <div class="product-percentage">24%</div>
+            </div>
+            
+            <div class="product-item">
+              <div class="product-info">
+                <div class="product-name">Organic Milk 1L</div>
+                <div class="product-sales">98 units sold</div>
+              </div>
+              <div class="product-percentage">19%</div>
+            </div>
+            
+            <div class="product-item">
+              <div class="product-info">
+                <div class="product-name">Chocolate Syrup</div>
+                <div class="product-sales">87 units sold</div>
+              </div>
+              <div class="product-percentage">16%</div>
+            </div>
+            
+            <div class="product-item">
+              <div class="product-info">
+                <div class="product-name">Vanilla Coffee</div>
+                <div class="product-sales">65 units sold</div>
+              </div>
+              <div class="product-percentage">12%</div>
+            </div>
+            
+            <div class="product-item">
+              <div class="product-info">
+                <div class="product-name">Caramel Latte</div>
+                <div class="product-sales">52 units sold</div>
+              </div>
+              <div class="product-percentage">10%</div>
+            </div>
+            
+            <div class="product-item">
+              <div class="product-info">
+                <div class="product-name">Espresso Shot</div>
+                <div class="product-sales">43 units sold</div>
+              </div>
+              <div class="product-percentage">8%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Detailed Sales Table -->
+      <div class="module-card">
+        <div class="module-header">
+          Sales Details
+        </div>
+        <div class="module-content">
+          <table>
             <thead>
               <tr>
-                <th>Month</th>
-                <th>Global Coffee</th>
-                <th>Dairy Farms</th>
-                <th>Sweet Supplies</th>
-                <th>Package Solutions</th>
-                <th>Flavor Masters</th>
+                <th>Date</th>
+                <th>Order ID</th>
+                <th>Cashier</th>
+                <th>Items</th>
+                <th>Payment Method</th>
+                <th>Total</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>January 2025</td>
-                <td>97%</td>
-                <td>94%</td>
-                <td>87%</td>
-                <td>90%</td>
-                <td>85%</td>
+                <td>Apr 30, 2025</td>
+                <td>#ORD-7894</td>
+                <td>John Doe</td>
+                <td>5 items</td>
+                <td>Cash</td>
+                <td>Rs.124.00</td>
               </tr>
               <tr>
-                <td>February 2025</td>
-                <td>96%</td>
-                <td>93%</td>
-                <td>88%</td>
-                <td>91%</td>
-                <td>86%</td>
+                <td>Apr 30, 2025</td>
+                <td>#ORD-7893</td>
+                <td>Emma Wilson</td>
+                <td>3 items</td>
+                <td>Card</td>
+                <td>Rs.86.50</td>
               </tr>
               <tr>
-                <td>March 2025</td>
-                <td>98%</td>
-                <td>94%</td>
-                <td>90%</td>
-                <td>92%</td>
-                <td>87%</td>
+                <td>Apr 29, 2025</td>
+                <td>#ORD-7892</td>
+                <td>Michael Brown</td>
+                <td>2 items</td>
+                <td>QR Code</td>
+                <td>Rs.45.20</td>
               </tr>
               <tr>
-                <td>April 2025</td>
-                <td>98%</td>
-                <td>95%</td>
-                <td>89%</td>
-                <td>92%</td>
-                <td>88%</td>
+                <td>Apr 29, 2025</td>
+                <td>#ORD-7891</td>
+                <td>Sarah Johnson</td>
+                <td>7 items</td>
+                <td>Card</td>
+                <td>Rs.196.80</td>
               </tr>
               <tr>
-                <td>May 2025 (MTD)</td>
-                <td>99%</td>
-                <td>96%</td>
-                <td>91%</td>
-                <td>93%</td>
-                <td>89%</td>
+                <td>Apr 28, 2025</td>
+                <td>#ORD-7890</td>
+                <td>John Doe</td>
+                <td>1 item</td>
+                <td>Cash</td>
+                <td>Rs.12.99</td>
+              </tr>
+              <tr>
+                <td>Apr 28, 2025</td>
+                <td>#ORD-7889</td>
+                <td>Emma Wilson</td>
+                <td>4 items</td>
+                <td>Card</td>
+                <td>Rs.98.75</td>
+              </tr>
+              <tr>
+                <td>Apr 28, 2025</td>
+                <td>#ORD-7888</td>
+                <td>Michael Brown</td>
+                <td>6 items</td>
+                <td>QR Code</td>
+                <td>Rs.156.30</td>
+              </tr>
+              <tr>
+                <td>Apr 27, 2025</td>
+                <td>#ORD-7887</td>
+                <td>Sarah Johnson</td>
+                <td>3 items</td>
+                <td>Cash</td>
+                <td>Rs.68.45</td>
+              </tr>
+              <tr>
+                <td>Apr 27, 2025</td>
+                <td>#ORD-7886</td>
+                <td>John Doe</td>
+                <td>2 items</td>
+                <td>Card</td>
+                <td>Rs.35.20</td>
+              </tr>
+              <tr>
+                <td>Apr 27, 2025</td>
+                <td>#ORD-7885</td>
+                <td>Emma Wilson</td>
+                <td>5 items</td>
+                <td>QR Code</td>
+                <td>Rs.112.60</td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+      
+      <!-- Pagination -->
+      <div style="display: flex; justify-content: center; margin-top: 20px;">
+        <div style="display: flex; gap: 5px;">
+          <button class="btn btn-outline" style="padding: 5px 10px;">&lt;</button>
+          <button class="btn" style="padding: 5px 12px; background-color: var(--primary); color: white;">1</button>
+          <button class="btn btn-outline" style="padding: 5px 12px;">2</button>
+          <button class="btn btn-outline" style="padding: 5px 12px;">3</button>
+          <button class="btn btn-outline" style="padding: 5px 12px;">4</button>
+          <button class="btn btn-outline" style="padding: 5px 12px;">5</button>
+          <button class="btn btn-outline" style="padding: 5px 10px;">&gt;</button>
         </div>
       </div>
       
@@ -575,27 +560,57 @@
   </div>
   
   <script>
-    // Mobile navigation toggle
+    // Mobile menu toggle
     document.getElementById('mobileNavToggle').addEventListener('click', function() {
       document.getElementById('sidebar').classList.toggle('active');
     });
     
-    // Tab switching functionality
-    document.querySelectorAll('.report-tab').forEach(tab => {
-      tab.addEventListener('click', function() {
-        document.querySelector('.report-tab.active').classList.remove('active');
-        this.classList.add('active');
-        // In a real implementation, this would load the appropriate report content
-      });
+    // Date range dependent fields
+    const dateRange = document.getElementById('date-range');
+    const startDate = document.getElementById('start-date');
+    const endDate = document.getElementById('end-date');
+    
+    dateRange.addEventListener('change', function() {
+      const today = new Date();
+      let start = new Date();
+      let end = new Date();
+      
+      switch(this.value) {
+        case 'this-month':
+          start = new Date(today.getFullYear(), today.getMonth(), 1);
+          end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          break;
+        case 'last-month':
+          start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+          end = new Date(today.getFullYear(), today.getMonth(), 0);
+          break;
+        case 'last-3-months':
+          start = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+          end = new Date(today.getFullYear(), today.getMonth(), 0);
+          break;
+        case 'custom':
+          // Keep current values
+          return;
+      }
+      
+      startDate.value = formatDate(start);
+      endDate.value = formatDate(end);
     });
     
-    // Export button functionality (placeholder)
-    document.querySelectorAll('.report-btn').forEach(button => {
-      if (button.textContent.includes('Export')) {
-        button.addEventListener('click', function() {
-          alert('Export functionality would be implemented here');
-        });
-      }
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
+    // Chart filter selection
+    const chartFilters = document.querySelectorAll('.chart-filter');
+    chartFilters.forEach(filter => {
+      filter.addEventListener('click', function() {
+        chartFilters.forEach(f => f.classList.remove('active'));
+        this.classList.add('active');
+      });
     });
   </script>
 </body>

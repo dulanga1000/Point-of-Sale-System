@@ -680,6 +680,7 @@
       });
     });
     
+    
     document.querySelectorAll('.page-btn:not(.active)').forEach(button => {
       button.addEventListener('click', function() {
         document.querySelector('.page-btn.active').classList.remove('active');
