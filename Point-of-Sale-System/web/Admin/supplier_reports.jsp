@@ -5,9 +5,16 @@
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ page import="java.sql.*" %>
+<%@ page import="java.util.*" %>
+<%@ page import="java.time.LocalTime" %>
+<%@ page import="java.time.format.DateTimeFormatter" %>
+<%@page import="java.sql.*"%>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sales Reports</title>
@@ -222,6 +229,46 @@
       margin-right: 5px;
       font-size: 16px;
     }
+    
+     /* card-chart */
+        /* Chart container styles */
+.chart-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.chart-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.chart {
+    width: 100%;
+    height: 300px;
+    min-height: 300px;
+    flex-grow: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .chart {
+        height: 250px;
+    }
+}
+
   </style>
 </head>
 <body>
@@ -365,21 +412,44 @@
       
       <!-- Charts -->
       <div class="chart-container">
-        <div class="chart-card">
-          <div class="chart-header">
-            <div class="chart-title">Sales Trend</div>
-            <div class="chart-filters">
-              <button class="chart-filter">Day</button>
-              <button class="chart-filter active">Week</button>
-              <button class="chart-filter">Month</button>
-            </div>
-          </div>
-          <div class="chart">
-            <div class="chart-placeholder">
-              <img src="${pageContext.request.contextPath}/Images/sales-chart.png" alt="Sales Chart" style="width: 100%; height: 100%; object-fit: cover;">
-            </div>
-          </div>
-        </div>
+<div class="chart-card">
+    <div class="chart-header">
+        <div class="chart-title">Product Categories Distribution</div>
+    </div>
+    <div id="categoryPieChart" class="chart"></div>
+    
+     <%-- Database connection test (hidden by default) --%>
+    <div style="display:none;">
+        <%
+        String dbStatus = "";
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            Connection conn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/swift_database", 
+                "root", 
+                "");
+            
+            if(conn != null && !conn.isClosed()) {
+                dbStatus = "Database connection successful";
+                
+                Statement testStmt = conn.createStatement();
+                ResultSet testRs = testStmt.executeQuery("SELECT COUNT(*) FROM products");
+                if(testRs.next()) {
+                    dbStatus += " | Found " + testRs.getInt(1) + " products";
+                }
+                testRs.close();
+                testStmt.close();
+            }
+            conn.close();
+        } catch(Exception e) {
+            dbStatus = "DB Connection Failed: " + e.getMessage();
+            e.printStackTrace();
+        }
+        %>
+        <%= dbStatus %>
+    </div>
+</div>
+
         
         <div class="chart-card">
           <div class="chart-header">
@@ -445,97 +515,46 @@
         <div class="module-content">
           <table>
             <thead>
-              <tr>
+                    <tr>
                 <th>Date</th>
                 <th>Order ID</th>
                 <th>Cashier</th>
                 <th>Items</th>
                 <th>Payment Method</th>
-                <th>Total</th>
-              </tr>
+                <th>Total (Rs.)</th>
+                  </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>Apr 30, 2025</td>
-                <td>#ORD-7894</td>
-                <td>John Doe</td>
-                <td>5 items</td>
-                <td>Cash</td>
-                <td>Rs.124.00</td>
-              </tr>
-              <tr>
-                <td>Apr 30, 2025</td>
-                <td>#ORD-7893</td>
-                <td>Emma Wilson</td>
-                <td>3 items</td>
-                <td>Card</td>
-                <td>Rs.86.50</td>
-              </tr>
-              <tr>
-                <td>Apr 29, 2025</td>
-                <td>#ORD-7892</td>
-                <td>Michael Brown</td>
-                <td>2 items</td>
-                <td>QR Code</td>
-                <td>Rs.45.20</td>
-              </tr>
-              <tr>
-                <td>Apr 29, 2025</td>
-                <td>#ORD-7891</td>
-                <td>Sarah Johnson</td>
-                <td>7 items</td>
-                <td>Card</td>
-                <td>Rs.196.80</td>
-              </tr>
-              <tr>
-                <td>Apr 28, 2025</td>
-                <td>#ORD-7890</td>
-                <td>John Doe</td>
-                <td>1 item</td>
-                <td>Cash</td>
-                <td>Rs.12.99</td>
-              </tr>
-              <tr>
-                <td>Apr 28, 2025</td>
-                <td>#ORD-7889</td>
-                <td>Emma Wilson</td>
-                <td>4 items</td>
-                <td>Card</td>
-                <td>Rs.98.75</td>
-              </tr>
-              <tr>
-                <td>Apr 28, 2025</td>
-                <td>#ORD-7888</td>
-                <td>Michael Brown</td>
-                <td>6 items</td>
-                <td>QR Code</td>
-                <td>Rs.156.30</td>
-              </tr>
-              <tr>
-                <td>Apr 27, 2025</td>
-                <td>#ORD-7887</td>
-                <td>Sarah Johnson</td>
-                <td>3 items</td>
-                <td>Cash</td>
-                <td>Rs.68.45</td>
-              </tr>
-              <tr>
-                <td>Apr 27, 2025</td>
-                <td>#ORD-7886</td>
-                <td>John Doe</td>
-                <td>2 items</td>
-                <td>Card</td>
-                <td>Rs.35.20</td>
-              </tr>
-              <tr>
-                <td>Apr 27, 2025</td>
-                <td>#ORD-7885</td>
-                <td>Emma Wilson</td>
-                <td>5 items</td>
-                <td>QR Code</td>
-                <td>Rs.112.60</td>
-              </tr>
-            </tbody>
+             <tbody>
+    <%
+        String URL = "jdbc:mysql://localhost:3306/Swift_Database";
+        String USER = "root";
+        String PASSWORD = "";
+
+        try {
+            Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+            PreparedStatement sql = conn.prepareStatement("SELECT * FROM orders");
+            ResultSet result = sql.executeQuery();
+
+            if (result.isBeforeFirst()) {  // Check if there are any results
+                while (result.next()) { %>
+                    <tr>
+                        <td><%= result.getString("order_date") %></td>
+                        <td>#ORD-<%= result.getString("order_id") %></td>
+                        <td><%= result.getString("cashier_name") %></td>
+                        <td><%= result.getString("items") %></td>
+                        <td><%= result.getString("payment_method") %></td>
+                        <td><%= String.format("%.2f", result.getDouble("total")) %></td>
+                    </tr>
+                <% }
+            } else { %>
+                <tr><td colspan="6" style="text-align:center;">No orders found</td></tr>
+            <% }
+            conn.close();
+        } catch (Exception ex) {
+            out.println("<p class='text-danger text-center'>Error: " + ex.getMessage() + "</p>");
+        }
+    %>
+</tbody>
           </table>
         </div>
       </div>
@@ -558,6 +577,17 @@
       </div>
     </div>
   </div>
+            <servlet>
+    <servlet-name>SalesReportServlet</servlet-name>
+    <servlet-class>com.example.servlet.SalesReportServlet</servlet-class>
+</servlet>
+
+<servlet-mapping>
+    <servlet-name>SalesReportServlet</servlet-name>
+    <url-pattern>/sappier_reports</url-pattern>
+</servlet-mapping>
+
+            
   
   <script>
     // Mobile menu toggle
@@ -612,6 +642,105 @@
         this.classList.add('active');
       });
     });
+    
+    // card-chart
+    
+    // Load the Visualization API and the corechart package
+    google.charts.load('current', {'packages':['corechart']});
+    
+    // Set a callback to run when the Google Visualization API is loaded
+    google.charts.setOnLoadCallback(drawCategoryChart);
+    
+    function drawCategoryChart() {
+        // Create a data table
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Category');
+        data.addColumn('number', 'Count');
+        
+        // Get data from JSP
+        <%
+        try {
+            Connection conn = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/swift_database", 
+                "root", 
+                "");
+            
+            String sql = "SELECT category, COUNT(*) as count FROM products GROUP BY category";
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            
+            while(rs.next()) {
+                String category = rs.getString("category");
+                // Properly escape JavaScript strings
+                category = category.replace("'", "\\'").replace("\n", "\\n").replace("\r", "\\r");
+        %>
+                data.addRow(['<%= category %>', <%= rs.getInt("count") %>]);
+        <%
+            }
+            conn.close();
+        } catch(Exception e) {
+            System.err.println("Error: " + e.getMessage());
+            // Fallback data if database fails
+            %>
+            data.addRow(['Food', 5]);
+            data.addRow(['Beverages', 2]);
+            data.addRow(['Other', 1]);
+            <%
+        }
+        %>
+        
+        // Set chart options
+        var options = {
+            title: 'Product Categories Distribution',
+            pieHole: 0.4,
+            pieSliceText: 'value',
+            chartArea: {
+                width: '90%', 
+                height: '80%',
+                left: "5%",
+                top: "15%",
+                right: "5%",
+                bottom: "15%"
+            },
+            legend: {
+                position: 'right',
+                alignment: 'center',
+                textStyle: {
+                    fontSize: 12
+                }
+            },
+            titleTextStyle: {
+                fontSize: 16,
+                bold: true
+            },
+            colors: ['#4285F4', '#EA4335', '#FBBC05', '#34A853', '#673AB7'],
+            tooltip: {
+                showColorCode: true,
+                textStyle: {
+                    fontSize: 12
+                }
+            },
+            fontSize: 12
+        };
+        
+        // Instantiate and draw the chart
+        try {
+            var chart = new google.visualization.PieChart(
+                document.getElementById('categoryPieChart'));
+            chart.draw(data, options);
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                chart.draw(data, options);
+            });
+        } catch (e) {
+            console.error("Error drawing chart: ", e);
+            document.getElementById('categoryPieChart').innerHTML = 
+                '<div style="color:red;padding:20px;text-align:center;">' +
+                'Chart failed to load. Check console for errors.</div>';
+        }
+    }
+
   </script>
 </body>
 </html>
