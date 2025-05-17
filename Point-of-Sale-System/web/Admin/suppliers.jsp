@@ -1,6 +1,6 @@
 <%-- 
     Document   : suppliers
-    Created on : May 16, 2025, 9:27:45 AM
+    Created on : May 16, 2025, 9:27:45 AM
     Author     : dulan
 --%>
 
@@ -400,7 +400,7 @@
               </div>
             </div>
             
-            <div class="module-action" data-page="products_by_supplier.jsp">
+            <div class="module-action" data-page="productsBySupplierController">
               <div class="action-icon">🔍</div>
               <div class="action-text">
                 <h4>Find Products by Supplier</h4>
@@ -687,7 +687,5 @@
       });
     });
   </script>
-  
-
 </body>
 </html>
