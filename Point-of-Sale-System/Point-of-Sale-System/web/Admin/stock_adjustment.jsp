@@ -96,28 +96,6 @@
       font-weight: 500;
     }
     
-    .search-results {
-      max-height: 300px;
-      overflow-y: auto;
-      margin-top: 10px;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-    }
-    
-    .product-item {
-      padding: 10px 15px;
-      border-bottom: 1px solid #e2e8f0;
-      cursor: pointer;
-    }
-    
-    .product-item:last-child {
-      border-bottom: none;
-    }
-    
-    .product-item:hover {
-      background-color: #f1f5f9;
-    }
-    
     .selected-product {
       background-color: #f8fafc;
       border: 1px solid #e2e8f0;
@@ -267,11 +245,48 @@
       <div class="stock-adjustment-container">
         <form action="processStockAdjustment.jsp" method="post" id="adjustmentForm">
           <div class="form-group">
-            <label for="productSearch">Search Product:</label>
-            <input type="text" id="productSearch" class="form-control" placeholder="Enter product name, SKU or barcode">
-            <div class="search-results" id="searchResults">
-              <!-- Search results will be populated here via JavaScript -->
-            </div>
+            <label for="productSelect">Select Product:</label>
+            <select id="productSelect" name="productId" class="form-select" required>
+              <option value="">-- Select a product --</option>
+              <% 
+              Connection conn = null;
+              try {
+                  Class.forName("com.mysql.cj.jdbc.Driver");
+                  String URL = "jdbc:mysql://localhost:3306/Swift_Database";
+                  String USER = "root";
+                  String PASSWORD = "";
+                  conn = DriverManager.getConnection(URL, USER, PASSWORD);
+                  
+                  String productQuery = "SELECT id, name, sku, stock_quantity, category_id, " +
+                                      "(SELECT name FROM categories WHERE id = products.category_id) as category_name " +
+                                      "FROM products ORDER BY name ASC";
+                                      
+                  PreparedStatement ps = conn.prepareStatement(productQuery);
+                  ResultSet rs = ps.executeQuery();
+                  
+                  while (rs.next()) {
+              %>
+              <option value="<%= rs.getInt("id") %>" 
+                      data-sku="<%= rs.getString("sku") %>" 
+                      data-stock="<%= rs.getInt("stock_quantity") %>" 
+                      data-category="<%= rs.getString("category_name") %>">
+                <%= rs.getString("name") %> - <%= rs.getString("sku") %>
+              </option>
+              <% 
+                  }
+              } catch (Exception e) {
+                  out.println("<option value=''>Error loading products: " + e.getMessage() + "</option>");
+              } finally {
+                  if (conn != null) {
+                      try {
+                          conn.close();
+                      } catch (SQLException e) {
+                          // Log the error
+                      }
+                  }
+              }
+              %>
+            </select>
           </div>
           
           <div id="selectedProductContainer" style="display: none;" class="selected-product">
@@ -281,7 +296,6 @@
               <div class="selected-product-detail">Current Stock: <span id="selectedProductStock">100</span></div>
               <div class="selected-product-detail">Category: <span id="selectedProductCategory">Category</span></div>
             </div>
-            <input type="hidden" name="productId" id="productId">
           </div>
           
           <div class="form-grid">
@@ -319,7 +333,7 @@
             
             <div class="form-group">
               <label for="reference">Reference Number:</label>
-              <input type="text" id="reference" name="reference" class="form-control" placeholder="PO number, invoice, etc.">
+              <input type="text" id="reference" name="reference" class="form-control" value="" readonly>
             </div>
             
             <div class="form-group form-grid-full">
@@ -357,7 +371,7 @@
               String URL = "jdbc:mysql://localhost:3306/Swift_Database";
               String USER = "root";
               String PASSWORD = ""; // Ensure this is secure in production
-              Connection conn = null;
+              conn = null;
               
               try {
                   Class.forName("com.mysql.cj.jdbc.Driver");
@@ -433,66 +447,63 @@
         });
     }
     
-    // Product search functionality
-    const productSearch = document.getElementById('productSearch');
-    const searchResults = document.getElementById('searchResults');
+    // Product selection functionality
+    const productSelect = document.getElementById('productSelect');
     const selectedProductContainer = document.getElementById('selectedProductContainer');
     const submitBtn = document.getElementById('submitBtn');
     
-    // Mock products for demonstration - in production, this would be fetched from the server
-    const products = [
-        { id: 1, name: 'Espresso Coffee', sku: 'ESP001', stock: 45, category: 'Beverages' },
-        { id: 2, name: 'Cappuccino Mix', sku: 'CAP002', stock: 32, category: 'Beverages' },
-        { id: 3, name: 'Chocolate Croissant', sku: 'CRO003', stock: 18, category: 'Bakery' },
-        { id: 4, name: 'Vanilla Latte Syrup', sku: 'SYR004', stock: 8, category: 'Beverages' },
-        { id: 5, name: 'Paper Cup (Large)', sku: 'CUP005', stock: 120, category: 'Packaging' }
-    ];
+    // Generate reference number
+    function generateReferenceNumber() {
+        const prefix = document.getElementById('adjustmentType').value === 'increase' ? 'IN' : 'OUT';
+        const date = new Date();
+        const timestamp = date.getFullYear().toString().substr(-2) + 
+                         padNumber(date.getMonth() + 1) + 
+                         padNumber(date.getDate()) + 
+                         padNumber(date.getHours()) + 
+                         padNumber(date.getMinutes());
+        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        return `${prefix}-${timestamp}-${random}`;
+    }
     
-    // In a real implementation, you would make an AJAX call to your server
-    productSearch.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        
-        if (searchTerm.length < 2) {
-            searchResults.innerHTML = '';
-            return;
-        }
-        
-        const filteredProducts = products.filter(product => 
-            product.name.toLowerCase().includes(searchTerm) || 
-            product.sku.toLowerCase().includes(searchTerm)
-        );
-        
-        searchResults.innerHTML = '';
-        
-        if (filteredProducts.length === 0) {
-            searchResults.innerHTML = '<div class="product-item">No products found</div>';
+    function padNumber(num) {
+        return num.toString().padStart(2, '0');
+    }
+    
+    // Update reference number when adjustment type changes
+    function updateReferenceNumber() {
+        document.getElementById('reference').value = generateReferenceNumber();
+    }
+    
+    // Initialize reference number
+    updateReferenceNumber();
+    
+    // Product selection
+    productSelect.addEventListener('change', function() {
+        if (this.value) {
+            const selectedOption = this.options[this.selectedIndex];
+            const sku = selectedOption.getAttribute('data-sku');
+            const stock = selectedOption.getAttribute('data-stock');
+            const category = selectedOption.getAttribute('data-category');
+            
+            // Display selected product info
+            document.getElementById('selectedProductName').textContent = selectedOption.text;
+            document.getElementById('selectedProductSKU').textContent = sku;
+            document.getElementById('selectedProductStock').textContent = stock;
+            document.getElementById('selectedProductCategory').textContent = category;
+            
+            // Show product container
+            selectedProductContainer.style.display = 'block';
+            
+            // Enable submit button
+            submitBtn.disabled = false;
         } else {
-            filteredProducts.forEach(product => {
-                const productItem = document.createElement('div');
-                productItem.className = 'product-item';
-                productItem.innerHTML = `<strong>${product.name}</strong> - ${product.sku} (Stock: ${product.stock})`;
-                productItem.addEventListener('click', () => selectProduct(product));
-                searchResults.appendChild(productItem);
-            });
+            // Hide product container if no product selected
+            selectedProductContainer.style.display = 'none';
+            
+            // Disable submit button
+            submitBtn.disabled = true;
         }
     });
-    
-    function selectProduct(product) {
-        // Display selected product
-        document.getElementById('selectedProductName').textContent = product.name;
-        document.getElementById('selectedProductSKU').textContent = product.sku;
-        document.getElementById('selectedProductStock').textContent = product.stock;
-        document.getElementById('selectedProductCategory').textContent = product.category;
-        document.getElementById('productId').value = product.id;
-        
-        // Show product container and clear search
-        selectedProductContainer.style.display = 'block';
-        searchResults.innerHTML = '';
-        productSearch.value = '';
-        
-        // Enable submit button
-        submitBtn.disabled = false;
-    }
     
     // Adjustment type selection
     function selectAdjustmentType(type) {
@@ -502,6 +513,9 @@
         
         document.querySelector(`.type-btn[data-type="${type}"]`).classList.add('active');
         document.getElementById('adjustmentType').value = type;
+        
+        // Update reference number when type changes
+        updateReferenceNumber();
     }
     
     // Initialize with "increase" as default
@@ -509,8 +523,15 @@
     
     // Form validation
     document.getElementById('adjustmentForm').addEventListener('submit', function(e) {
+        const productId = document.getElementById('productSelect').value;
         const quantity = document.getElementById('quantity').value;
         const reason = document.getElementById('reason').value;
+        
+        if (!productId) {
+            e.preventDefault();
+            alert('Please select a product');
+            return;
+        }
         
         if (!quantity || quantity < 1) {
             e.preventDefault();
