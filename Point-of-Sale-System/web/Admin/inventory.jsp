@@ -22,88 +22,294 @@
   <link rel="Stylesheet" href="styles.css">
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <style>
-    /* Basic Styles - same as provided before for completeness */
-    :root {
-        --primary: #4F46E5; 
-        --secondary: #6B7280;
-        --success: #10B981;  
-        --warning: #F59E0B;  
-        --danger: #EF4444;   
-        --dark: #1F2937;     
+    /* Additional styles for the inventory dashboard */
+    .inventory-filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
-    body { font-family: 'Inter', sans-serif; background-color: #f9fafb; margin: 0; color: var(--dark); }
-    .inventory-filters { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-    .filter-item { background-color: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 15px; display: flex; align-items: center; cursor: pointer; }
-    .filter-icon { margin-right: 8px; color: var(--primary); }
-    .inventory-search { flex: 1; display: flex; min-width: 250px; }
-    .inventory-search input { flex: 1; border: 1px solid #e2e8f0; border-right: none; border-radius: 6px 0 0 6px; padding: 10px 15px; outline: none; }
-    .inventory-search button { background-color: var(--primary); color: white; border: none; border-radius: 0 6px 6px 0; padding: 0 15px; cursor: pointer; }
-    .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
-    .status-badge.in-stock { background-color: #d1fae5; color: var(--success); }
-    .status-badge.low-stock { background-color: #fef3c7; color: var(--warning); }
-    .status-badge.out-of-stock { background-color: #fee2e2; color: var(--danger); }
-    .inventory-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-    .metric-card { background-color: white; border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
-    .metric-title { font-size: 14px; color: var(--secondary); margin-bottom: 8px; }
-    .metric-value { font-size: 24px; font-weight: 600; }
-    .metric-change { font-size: 12px; margin-top: 5px; display: flex; align-items: center; }
-    .metric-change.positive { color: var(--success); }
-    .metric-change.negative { color: var(--danger); }
-    .inventory-actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    .action-button { background-color: var(--primary); color: white; border: none; border-radius: 6px; padding: 10px 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500; text-decoration: none; }
-    .action-button.secondary { background-color: white; color: var(--dark); border: 1px solid #e2e8f0; }
-    .category-filter { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; margin-bottom: 20px; }
-    .category-item { background-color: #f1f5f9; border-radius: 20px; padding: 8px 16px; font-size: 14px; white-space: nowrap; cursor: pointer; }
-    .category-item.active { background-color: var(--primary); color: white; }
-    .chart-wrapper { background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); margin-bottom: 20px; height: 350px; display: flex; align-items: center; justify-content: center; }
-    .low-stock-list { list-style: none; padding: 0; margin: 0; }
-    .stock-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
-    .stock-item:last-child { border-bottom: none; }
-    .stock-info { display: flex; flex-direction: column; }
-    .stock-name { font-weight: 500; margin-bottom: 3px; }
-    .stock-supplier { font-size: 12px; color: var(--secondary); }
-    .stock-quantity { font-weight: 500; color: var(--danger); }
-    .dashboard { display: flex; min-height: 100vh; }
-    .sidebar { width: 250px; background-color: #1f2937; color: #d1d5db; padding: 20px; transition: transform 0.3s ease-in-out; }
-    .sidebar.active { transform: translateX(0) !important; }
-    .logo { display: flex; align-items: center; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid #374151; margin-bottom: 20px; }
-    .logo img { width: 40px; height: 40px; }
-    .logo h2 { margin: 0; font-size: 20px; color: white; }
-    .main-content { flex: 1; padding: 20px; background-color: #f3f4f6; overflow-y: auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background-color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .page-title { font-size: 24px; font-weight: 600; margin: 0; }
-    .user-profile { display: flex; align-items: center; gap: 10px; }
-    .user-profile img { width: 40px; height: 40px; border-radius: 50%; }
-    .user-profile h4 { margin: 0; font-weight: 500; }
-    .modules-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px; }
-    .module-card { background-color: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
-    .module-header { padding: 15px 20px; font-weight: 600; border-bottom: 1px solid #e5e7eb; }
-    .module-content { padding: 20px; flex-grow: 1; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { text-align: left; padding: 12px 15px; border-bottom: 1px solid #e5e7eb; }
-    th { background-color: #f9fafb; font-weight: 600; color: var(--secondary); }
-    tbody tr:hover { background-color: #f3f4f6; }
-    .status.completed { color: var(--success); font-weight: 500; }
-    .action-btn, .action-menu-btn { background: none; border: none; cursor: pointer; padding: 5px; font-size: 16px; color: var(--primary); }
-    .action-btn:hover, .action-menu-btn:hover { color: var(--dark); background-color: #f1f5f9; }
-    .text-danger { color: var(--danger); }
-    .text-center { text-align: center; }
-    .footer { text-align: center; padding: 20px; font-size: 14px; color: var(--secondary); background-color: white; border-radius: 8px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .mobile-top-bar { display: none; background-color: #1f2937; color: white; padding: 10px 15px; align-items: center; justify-content: space-between; }
-    .mobile-logo { display: flex; align-items: center; gap: 8px; }
-    .mobile-logo img { width: 30px; height: 30px; }
-    .mobile-logo h2 { font-size: 18px; margin: 0; }
-    .mobile-nav-toggle { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+    
+    .filter-item {
+      background-color: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    
+    .filter-icon {
+      margin-right: 8px;
+      color: var(--primary);
+    }
+    
+    .inventory-search {
+      flex: 1;
+      display: flex;
+      min-width: 250px;
+    }
+    
+    .inventory-search input {
+      flex: 1;
+      border: 1px solid #e2e8f0;
+      border-right: none;
+      border-radius: 6px 0 0 6px;
+      padding: 10px 15px;
+    }
+    
+    .inventory-search button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0 6px 6px 0;
+      padding: 0 15px;
+      cursor: pointer;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .status-badge.in-stock {
+      background-color: #d1fae5;
+      color: var(--success);
+    }
+    
+    .status-badge.low-stock {
+      background-color: #fef3c7;
+      color: var(--warning);
+    }
+    
+    .status-badge.out-of-stock {
+      background-color: #fee2e2;
+      color: var(--danger);
+    }
+    
+    .inventory-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .metric-card {
+      background-color: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .metric-title {
+      font-size: 14px;
+      color: var(--secondary);
+      margin-bottom: 8px;
+    }
+    
+    .metric-value {
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .metric-change {
+      font-size: 12px;
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .metric-change.positive {
+      color: var(--success);
+    }
+    
+    .metric-change.negative {
+      color: var(--danger);
+    }
+    
+    .inventory-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .action-button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+    
+    .action-button.secondary {
+      background-color: white;
+      color: var(--dark);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .category-filter {
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .category-item {
+      background-color: #f1f5f9;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 14px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    
+    .category-item.active {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .inventory-movements {
+      margin-top: 20px;
+    }
+    
+    .chart-wrapper {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+      /*Adjust height as needed for the chart */
+      height: 350px; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Removed chart-placeholder as we will draw the actual chart */
+    
+    .movement-type {
+      display: inline-flex;
+      align-items: center;
+      font-size: 13px;
+      margin-right: 10px;
+    }
+    
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    
+    .dot.inward {
+      background-color: var(--success);
+    }
+    
+    .dot.outward {
+      background-color: var(--danger);
+    }
+    
+    .progress-bar {
+      height: 6px;
+      background-color: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+    
+    .action-menu {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .action-menu-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 30px;
+      height: 30px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .action-menu-btn:hover {
+      background-color: #f1f5f9;
+    }
+    
+    /* Low Stock List Styles */
+    .low-stock-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .stock-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .stock-item:last-child {
+      border-bottom: none;
+    }
+    
+    .stock-info {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .stock-name {
+      font-weight: 500;
+      margin-bottom: 3px;
+    }
+    
+    .stock-supplier {
+      font-size: 12px;
+      color: var(--secondary);
+    }
+    
+    .stock-quantity {
+      font-weight: 500;
+      color: var(--danger);
+    }
+    
+    /* Responsive adjustments */
     @media (max-width: 768px) {
-      .sidebar { position: fixed; left: 0; top: 0; height: 100%; transform: translateX(-100%); z-index: 1000; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
-      .sidebar.active { transform: translateX(0); }
-      .main-content { margin-left: 0; }
-      .inventory-filters { flex-direction: column; }
-      .inventory-search { width: 100%; }
-      .action-button { width: 100%; justify-content: center; }
-      .chart-wrapper { height: 300px;  }
-      .mobile-top-bar { display: flex; position: fixed; top: 0; left: 0; width: 100%; z-index: 999; }
-      .dashboard { padding-top: 50px; }
+      .inventory-filters {
+        flex-direction: column;
+      }
+      
+      .inventory-search {
+        width: 100%;
+      }
+      
+      .action-button {
+        width: 100%;
+        justify-content: center;
+      }
+      .chart-wrapper {
+        height: 300px; /* Adjust for smaller screens */
+      }
     }
   </style>
 
@@ -164,7 +370,7 @@
         if (connTotalValue != null) try { connTotalValue.close(); } catch (SQLException ex) { /* log ex */ }
     }
 
-    Locale sriLankaLocale = new Locale("si", "LK"); 
+    Locale sriLankaLocale = new Locale("en ", "LK"); 
     NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(sriLankaLocale);
     String formattedTotalInventoryValue = currencyFormatter.format(totalInventoryMonetaryValue);
     
