@@ -237,7 +237,7 @@
       
       <!-- Form Container -->
       <div class="po-form-container">
-        <form action="process_purchase_order.jsp" method="post">
+        <form action="/Point-of-Sale-System/Admin/PurchaseOrderServlet" method="post"onsubmit="updateSummary()">
           <!-- Order Information -->
           <div class="form-row">
             <div class="form-group">
@@ -266,6 +266,7 @@
                     String PASSWORD = "";
 
                     try {
+                        Class.forName("com.mysql.cj.jdbc.Driver");
                         Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
                         PreparedStatement sql = conn.prepareStatement("SELECT supplier_id, company_name FROM suppliers WHERE supplier_status = 'Active' ORDER BY company_name");
                         ResultSet result = sql.executeQuery();
@@ -309,79 +310,111 @@
           </div>
           
           <!-- Products Table -->
-          <h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 16px;">Order Items</h3>
-          <table class="products-table">
-            <thead>
-              <tr>
-                <th style="width: 40%;">Product</th>
-                <th style="width: 15%;">Quantity</th>
-                <th style="width: 20%;">Unit Price</th>
-                <th style="width: 20%;">Total</th>
-                <th style="width: 5%;"></th>
-              </tr>
-            </thead>
-            <tbody id="product-rows">
-              <tr>
-                <td>
-                  <select name="product_id[]" class="product-select" required>
-                    <option value="">-- Select Product --</option>
-                    <%
-                        try {
-                            Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-                            PreparedStatement sql = conn.prepareStatement("SELECT product_id, product_name, unit_price FROM products ORDER BY product_name");
-                            ResultSet result = sql.executeQuery();
+<h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 16px;">Order Items</h3>
+<table class="products-table">
+  <thead>
+    <tr>
+      <th style="width: 40%;">Product</th>
+      <th style="width: 15%;">Quantity</th>
+      <th style="width: 20%;">Unit Price</th>
+      <th style="width: 20%;">Total</th>
+      <th style="width: 5%;"></th>
+    </tr>
+  </thead>
+  <tbody id="product-rows">
+    <tr>
+      <td>
+        <select name="product_id[]" class="product-select" required>
+          <option value="">-- Select Product --</option>
+          <%
+              try {
+                  Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+                  PreparedStatement sql = conn.prepareStatement("SELECT id, name, price FROM products ORDER BY name");
+                  ResultSet result = sql.executeQuery();
 
-                            while (result.next()) { %>
-                                <option value="<%= result.getString("product_id") %>"><%= result.getString("product_name") %> - Rs.<%= result.getDouble("unit_price") %></option>
-                            <% }
-                            conn.close();
-                        } catch (Exception ex) {
-                            out.println("<option value=''>Error loading products: " + ex.getMessage() + "</option>");
-                        }
-                    %>
-                  </select>
-                </td>
-                <td>
-                  <input type="number" name="quantity[]" class="quantity-input" value="1" min="1" required>
-                </td>
-                <td class="unit-price">Rs.0.00</td>
-                <td class="row-total">Rs.0.00</td>
-                <td>
-                  <button type="button" class="remove-row" style="background: none; border: none; color: var(--danger); cursor: pointer;">❌</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  while (result.next()) {
+          %>
+              <option value="<%= result.getString("id") %>" data-price="<%= result.getDouble("price") %>">
+               <%= result.getString("name") %> - Rs.<%= result.getDouble("price") %>
+              </option>
+
+          <%
+                  }
+                  conn.close();
+              } catch (Exception ex) {
+                  out.println("<option value=''>Error loading products: " + ex.getMessage() + "</option>");
+              }
+          %>
+        </select>
+      </td>
+      <td>
+        <input type="number" name="quantity[]" class="quantity-input" value="1" min="1" required>
+      </td>
+      <td class="unit-price">Rs.0.00</td>
+      <td class="row-total">Rs.0.00</td>
+      <td>
+        <button type="button" class="remove-row-btn" onclick="removeProductRow(this)" style="background: none; border: none; color: var(--danger); cursor: pointer;">❌</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
           
-          <button type="button" class="add-row-btn">+ Add Another Product</button>
+          <button type="button" class="add-row-btn" onclick="addProductRow()" >+ Add Another Product</button>
           
           <!-- Order Summary -->
-          <div class="summary-box">
+          
             <div class="summary-row">
-              <span>Subtotal:</span>
-              <span id="subtotal">Rs.0.00</span>
+                 <label for="tax_rate" style="flex: 1;">Tax (%):</label>
+                  <input type="number" id="tax_rate" name="tax_rate" value="15" min="0" max="100" step="0.01" style="width: 80px; text-align: right;" oninput="updateSummary()">
             </div>
             <div class="summary-row">
-              <span>Tax (15%):</span>
-              <span id="tax">Rs.0.00</span>
+                 <span>Tax Amount:</span>
+                 <span id="tax">Rs.0.00</span>
             </div>
-            <div class="summary-row">
-              <span>Shipping:</span>
-              <span id="shipping">Rs.0.00</span>
+
+          
+
+             <div class="summary-row">
+                  <span>Shipping:</span>
+                  <span id="shipping">Rs.500.00</span>
+             </div>
+            <input type="hidden" id="shipping_input" name="shipping_amount" value="500.00">
+
+
+
+
+          
+            <div class="summary-box">
+              <div class="summary-row">
+               <span>Subtotal:</span>
+               <span id="subtotal">Rs.0.00</span>
+              </div>
+              <div class="summary-row">
+               <span>Total:</span>
+               <span id="total">Rs.0.00</span>
+             </div>
             </div>
-            <div class="summary-row">
-              <span>Total:</span>
-              <span id="total">Rs.0.00</span>
-            </div>
-          </div>
+
+               
+               
+           
+    
+
           
           <!-- Action Buttons -->
           <div class="action-buttons">
-            <button type="button" class="action-btn btn-secondary" onclick="window.location.href='suppliers.jsp'">Cancel</button>
-            <button type="submit" class="action-btn btn-primary">Create Purchase Order</button>
+  
+            <!-- ✅ Hidden inputs for backend -->
+             <input type="hidden" id="shipping_input" name="shipping_amount" value="500.00">
+             <input type="hidden" id="subtotal_input" name="subtotal" value="0.00">
+             <input type="hidden" id="total_input" name="total" value="0.00">
+
+           <!-- Buttons -->
+             <button type="button" class="action-btn btn-secondary" onclick="window.location.href='suppliers.jsp'">Cancel</button>
+             <button type="submit" class="action-btn btn-primary">Create Purchase Order</button>
           </div>
-        </form>
-      </div>
+
       
       <div class="footer">
         Swift © 2025.
@@ -398,5 +431,102 @@
     // You requested without JavaScript, but minimal JS is included for mobile responsiveness
     // The supplier dropdown functionality works without JS
   </script>
+  <script>
+  function updateRow(row) {
+    const productSelect = row.querySelector('.product-select');
+    const quantityInput = row.querySelector('.quantity-input');
+    const unitPriceTd = row.querySelector('.unit-price');
+    const rowTotalTd = row.querySelector('.row-total');
+
+    const selectedOption = productSelect.options[productSelect.selectedIndex];
+    if (!selectedOption || !selectedOption.text.includes("Rs.")) return;
+
+    const priceText = selectedOption.text.split("Rs.")[1];
+    const unitPrice = parseFloat(priceText.replace(",", "").trim()) || 0;
+    const quantity = parseInt(quantityInput.value) || 0;
+
+    const rowTotal = unitPrice * quantity;
+    unitPriceTd.textContent = "Rs." + unitPrice.toFixed(2);
+    rowTotalTd.textContent = "Rs." + rowTotal.toFixed(2);
+
+    updateSummary();
+  }
+
+  function updateSummary() {
+  let subtotal = 0;
+
+  // Sum all product row totals
+  document.querySelectorAll('#product-rows tr').forEach(row => {
+    const rowTotalText = row.querySelector('.row-total')?.textContent?.replace("Rs.", "").trim() || "0";
+    subtotal += parseFloat(rowTotalText) || 0;
+  });
+
+  const taxRate = parseFloat(document.getElementById('tax_rate')?.value || 0);
+  const shipping = parseFloat(document.getElementById('shipping_input')?.value || 0);
+  const taxAmount = subtotal * (taxRate / 100);
+  const total = subtotal + taxAmount + shipping;
+
+  // Update UI display
+  document.getElementById('subtotal').textContent = "Rs." + subtotal.toFixed(2);
+  document.getElementById('tax').textContent = "Rs." + taxAmount.toFixed(2);
+  document.getElementById('shipping').textContent = "Rs." + shipping.toFixed(2);
+  document.getElementById('total').textContent = "Rs." + total.toFixed(2);
+
+  // Update hidden input fields for backend
+  document.getElementById('subtotal_input').value = subtotal.toFixed(2);
+  document.getElementById('total_input').value = total.toFixed(2);
+}
+
+
+
+
+
+
+  document.querySelectorAll('.product-select, .quantity-input').forEach(el => {
+    el.addEventListener('change', function () {
+      const row = el.closest('tr');
+      updateRow(row);
+    });
+  });
+
+  document.getElementById('tax_rate').addEventListener('input', updateSummary);
+  document.getElementById('shipping_input').addEventListener('input', updateSummary);
+  // Recalculate initially
+  updateSummary();
+  
+  function prepareOrderData() {
+  const rows = document.querySelectorAll('#product-rows tr');
+  const productIds = [];
+  const quantities = [];
+
+  rows.forEach(row => {
+    const productSelect = row.querySelector('.product-select');
+    const quantityInput = row.querySelector('.quantity-input');
+
+    const productId = productSelect.value;
+    const quantity = parseInt(quantityInput.value);
+
+    if (productId && quantity > 0) {
+      productIds.push(productId);
+      quantities.push(quantity);
+    }
+  });
+  
+  
+
+  document.getElementById('product_ids').value = productIds.join(',');
+  document.getElementById('quantities').value = quantities.join(',');
+  return true;
+}
+
+
+</script>
+
+
+
+
+
+
+
 </body>
-</html>
+</html>   
