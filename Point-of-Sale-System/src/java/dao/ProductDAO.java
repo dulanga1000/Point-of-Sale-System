@@ -38,7 +38,6 @@ public class ProductDAO {
         );
     }
 
-    // Original addProduct method... (keep as is)
     public boolean addProduct(Product product) {
         String sql = "INSERT INTO products (name, category, price, sku, stock, supplier, image_path, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -51,20 +50,18 @@ public class ProductDAO {
             stmt.setString(7, product.getImagePath());
             stmt.setString(8, product.getStatus());
             return stmt.executeUpdate() > 0;
-        } catch (SQLException e) { // Use SQLException
+        } catch (SQLException e) { 
             System.err.println("SQL Error adding product: " + e.getMessage());
             e.printStackTrace();
-        } catch (Exception e) { // Catch other potential exceptions
+        } catch (Exception e) { 
              System.err.println("Error adding product: " + e.getMessage());
             e.printStackTrace();
         }
         return false;
     }
 
-    // Original getAllProducts method (fetches all products, no filters)
     public List<Product> getAllProducts() {
         List<Product> products = new ArrayList<>();
-        // Added ORDER BY for consistent display
         String sql = "SELECT * FROM products ORDER BY name ASC";
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -81,10 +78,8 @@ public class ProductDAO {
         return products;
     }
 
-    // *** NEW: Method to get all unique categories ***
     public List<String> getAllCategories() {
         List<String> categories = new ArrayList<>();
-        // Select distinct, non-null, non-empty categories and order them
         String sql = "SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != '' ORDER BY category ASC";
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -101,16 +96,14 @@ public class ProductDAO {
         return categories;
     }
 
-    // *** NEW: Method to search products by name or SKU (fetches all matches) ***
     public List<Product> searchProducts(String query) {
         List<Product> products = new ArrayList<>();
-        // Use LIKE for partial matching, trim query, add wildcards
         String sql = "SELECT * FROM products WHERE LOWER(name) LIKE LOWER(?) OR LOWER(sku) LIKE LOWER(?) ORDER BY name ASC";
-        String searchTerm = "%" + query.trim() + "%"; // Add wildcards for LIKE
+        String searchTerm = "%" + query.trim() + "%"; 
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, searchTerm); // Set parameter for name search
-            stmt.setString(2, searchTerm); // Set parameter for sku search
+            stmt.setString(1, searchTerm); 
+            stmt.setString(2, searchTerm); 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     products.add(mapRowToProduct(rs));
@@ -126,13 +119,11 @@ public class ProductDAO {
         return products;
     }
 
-    // *** NEW: Method to get products by category (fetches all matches) ***
     public List<Product> getProductsByCategory(String category) {
         List<Product> products = new ArrayList<>();
-        // Exact match for category, order by name
         String sql = "SELECT * FROM products WHERE category = ? ORDER BY name ASC";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, category); // Set category parameter
+            stmt.setString(1, category); 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     products.add(mapRowToProduct(rs));
@@ -148,16 +139,12 @@ public class ProductDAO {
         return products;
     }
 
-
-    // --- Methods below might be useful for admin/other parts, keep them ---
-
-    // getProductsByPage (for potential future pagination)
     public List<Product> getProductsByPage(int itemsPerPage, int offset) {
         List<Product> products = new ArrayList<>();
-        String sql = "SELECT * FROM products ORDER BY name ASC LIMIT ? OFFSET ?"; // Added ORDER BY
+        String sql = "SELECT * FROM products ORDER BY name ASC LIMIT ? OFFSET ?"; 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, itemsPerPage); // Set the limit
-            stmt.setInt(2, offset);       // Set the offset
+            stmt.setInt(1, itemsPerPage); 
+            stmt.setInt(2, offset);       
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     products.add(mapRowToProduct(rs));
@@ -173,14 +160,13 @@ public class ProductDAO {
         return products;
     }
 
-    // getTotalProductCount (for potential future pagination)
     public int getTotalProductCount() {
         String sql = "SELECT COUNT(*) FROM products";
         int count = 0;
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
-                count = rs.getInt(1); // Get the count from the first column
+                count = rs.getInt(1); 
             }
         } catch (SQLException e) {
             System.err.println("SQL Error getting total product count: " + e.getMessage());
@@ -192,9 +178,8 @@ public class ProductDAO {
         return count;
     }
 
-    // getLowStockCount
     public int getLowStockCount(int threshold) {
-        String sql = "SELECT COUNT(*) FROM products WHERE stock <= ?"; // Changed to <= threshold
+        String sql = "SELECT COUNT(*) FROM products WHERE stock <= ?"; 
         int count = 0;
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, threshold);
@@ -213,7 +198,6 @@ public class ProductDAO {
         return count;
     }
 
-    // getUniqueCategoryCount
      public int getUniqueCategoryCount() {
          String sql = "SELECT COUNT(DISTINCT category) FROM products WHERE category IS NOT NULL AND category != ''";
          int count = 0;
@@ -232,8 +216,6 @@ public class ProductDAO {
          return count;
      }
 
-
-    // getProductById method... (keep as is)
     public Product getProductById(int id) {
         String sql = "SELECT * FROM products WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -244,16 +226,15 @@ public class ProductDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("SQL Error getting product by ID: " + e.getMessage());
+            System.err.println("SQL Error getting product by ID: " + id + " - " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
-            System.err.println("Error getting product by ID: " + e.getMessage());
+            System.err.println("Error getting product by ID: " + id + " - " + e.getMessage());
             e.printStackTrace();
         }
         return null;
     }
 
-    // deleteProduct method... (keep as is)
     public boolean deleteProduct(int id) {
         String sql = "DELETE FROM products WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -269,7 +250,6 @@ public class ProductDAO {
         return false;
     }
 
-    // updateProduct method... (keep as is)
     public boolean updateProduct(Product product) {
         String sql = "UPDATE products SET name=?, category=?, price=?, sku=?, stock=?, supplier=?, image_path=?, status=? WHERE id=?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -291,5 +271,64 @@ public class ProductDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    // ***** NEW METHOD *****
+    /**
+     * Decreases the stock of a product by the given quantity.
+     * Ensures that the stock does not go below zero as a result of this operation.
+     * @param productId The ID of the product to update.
+     * @param quantityDecreased The quantity to decrease the stock by.
+     * @return true if the stock was updated successfully, false otherwise.
+     */
+    public boolean decreaseStock(int productId, int quantityDecreased) {
+        // This query tries to decrement stock only if current stock is sufficient
+        String sql = "UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, quantityDecreased);
+            stmt.setInt(2, productId);
+            stmt.setInt(3, quantityDecreased); // Condition: current stock must be >= quantityDecreased
+            
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Stock updated for product ID " + productId + ". Decreased by " + quantityDecreased);
+                return true;
+            } else {
+                // This can happen if product ID is not found, or if stock < quantityDecreased
+                Product currentProduct = getProductById(productId);
+                int currentStock = (currentProduct != null) ? currentProduct.getStock() : -1;
+                System.err.println("Stock update failed for product ID " + productId + 
+                                   ". Product not found, or insufficient stock (requested: " + quantityDecreased + 
+                                   ", available: " + currentStock + ").");
+                return false;
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Error decreasing stock for product ID " + productId + ": " + e.getMessage());
+            e.printStackTrace(); // Log the stack trace for debugging
+        }
+        return false;
+    }
+
+    // ***** NEW METHOD *****
+    /**
+     * Gets a product ID by its name.
+     * Note: Using names as identifiers is less reliable than IDs or SKUs due to potential duplicates.
+     * @param productName The name of the product.
+     * @return The product ID, or -1 if not found or an error occurs.
+     */
+    public int getProductIdByName(String productName) {
+        String sql = "SELECT id FROM products WHERE name = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, productName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("SQL Error getting product ID by name '" + productName + "': " + e.getMessage());
+            e.printStackTrace(); // Log the stack trace
+        }
+        return -1; // Return -1 to indicate "not found" or an error
     }
 }

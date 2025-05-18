@@ -76,39 +76,7 @@
                 <h2>Swift</h2>
             </div>
 
-            <ul class="menu">
-                <li class="menu-item active">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>Sales</span>
-                </li>
-                <li class="menu-item">
-                    <i class="fas fa-box"></i>
-                    <span>Products</span>
-                </li>
-                <li class="menu-item">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Reports</span>
-                </li>
-                <li class="menu-item">
-                    <i class="fas fa-warehouse"></i>
-                    <span>Inventory</span>
-                </li>
-                <li class="menu-item">
-                    <i class="fas fa-receipt"></i>
-                    <span>Transactions</span>
-                </li>
-                <li class="menu-item">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </li>
-                <li class="menu-item">
-                    <a href="${pageContext.request.contextPath}/logoutAction" style="text-decoration: none; color: inherit;">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
+            <jsp:include page="menu.jsp" />
 
         <div class="main-content">
             <div class="header">
