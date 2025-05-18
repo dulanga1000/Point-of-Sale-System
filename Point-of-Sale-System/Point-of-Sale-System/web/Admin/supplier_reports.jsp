@@ -10,7 +10,7 @@
 <%@ page import="java.time.LocalTime" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <%@page import="java.sql.*"%>
-
+<%@ page import="java.text.DecimalFormat" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -508,56 +508,109 @@
       </div>
       
       <!-- Detailed Sales Table -->
-      <div class="module-card">
+    <!-- [Previous head content remains the same] -->
+    <style>
+        /* Additional style for new columns */
+        .discount-cell {
+            color: #d32f2f; /* Red color for discounts */
+            font-weight: bold;
+        }
+        .tax-cell {
+            color: #388e3c; /* Green color for tax */
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- [Previous HTML content remains the same until the table section] -->
+    
+    <!-- Detailed Sales Table -->
+    <div class="module-card">
         <div class="module-header">
-          Sales Details
+            Sales Details
         </div>
         <div class="module-content">
-          <table>
-            <thead>
+            <table>
+                <thead>
                     <tr>
-                <th>Date</th>
-                <th>Order ID</th>
-                <th>Cashier</th>
-                <th>Items</th>
-                <th>Payment Method</th>
-                <th>Total (Rs.)</th>
-                  </tr>
-            </thead>
-             <tbody>
-    <%
-        String URL = "jdbc:mysql://localhost:3306/Swift_Database";
-        String USER = "root";
-        String PASSWORD = "";
-
-        try {
-            Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-            PreparedStatement sql = conn.prepareStatement("SELECT * FROM orders");
-            ResultSet result = sql.executeQuery();
-
-            if (result.isBeforeFirst()) {  // Check if there are any results
-                while (result.next()) { %>
-                    <tr>
-                        <td><%= result.getString("order_date") %></td>
-                        <td>#ORD-<%= result.getString("order_id") %></td>
-                        <td><%= result.getString("cashier_name") %></td>
-                        <td><%= result.getString("items") %></td>
-                        <td><%= result.getString("payment_method") %></td>
-                        <td><%= String.format("%.2f", result.getDouble("total")) %></td>
+                        <th>Date</th>
+                        <th>Receipt #</th>
+                        <th>Cashier</th>
+                        <th>Items</th>
+                        <th>Payment</th>
+                        <th>Subtotal</th>
+                        <th>Discount</th>
+                        <th>Tax</th>
+                        <th>Total</th>
                     </tr>
-                <% }
-            } else { %>
-                <tr><td colspan="6" style="text-align:center;">No orders found</td></tr>
-            <% }
-            conn.close();
-        } catch (Exception ex) {
-            out.println("<p class='text-danger text-center'>Error: " + ex.getMessage() + "</p>");
-        }
-    %>
-</tbody>
-          </table>
+                </thead>
+                <tbody>
+                    <%
+                        String URL = "jdbc:mysql://localhost:3306/Swift_Database";
+                        String USER = "root";
+                        String PASSWORD = "";
+                        DecimalFormat df = new DecimalFormat("#,##0.00");
+
+                        try {
+                            Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+                            
+                            // Main query to get receipts with tax and discount
+                            String sql = "SELECT r.receipt_id, r.receipt_number, r.receipt_date, r.cashier_name, " +
+                                         "r.payment_method, r.subtotal, r.discount, r.tax, r.total " +
+                                         "FROM receipts r ORDER BY r.receipt_date DESC";
+                            
+                            PreparedStatement stmt = conn.prepareStatement(sql);
+                            ResultSet result = stmt.executeQuery();
+
+                            if (result.isBeforeFirst()) {
+                                while (result.next()) { 
+                                    // Get items for this receipt
+                                    String itemsSql = "SELECT item_name, quantity FROM receipt_items WHERE receipt_id = ?";
+                                    PreparedStatement itemsStmt = conn.prepareStatement(itemsSql);
+                                    itemsStmt.setInt(1, result.getInt("receipt_id"));
+                                    ResultSet itemsResult = itemsStmt.executeQuery();
+                                    
+                                    StringBuilder itemsList = new StringBuilder();
+                                    while(itemsResult.next()) {
+                                        itemsList.append(itemsResult.getString("item_name"))
+                                                .append(" (x")
+                                                .append(itemsResult.getInt("quantity"))
+                                                .append("), ");
+                                    }
+                                    // Remove trailing comma
+                                    String itemsDisplay = itemsList.length() > 0 ? 
+                                        itemsList.substring(0, itemsList.length() - 2) : "No items";
+                                    
+                                    itemsResult.close();
+                                    itemsStmt.close();
+                    %>
+                    <tr>
+                        <td><%= result.getString("receipt_date") %></td>
+                        <td><%= result.getString("receipt_number") %></td>
+                        <td><%= result.getString("cashier_name") %></td>
+                        <td><%= itemsDisplay %></td>
+                        <td><%= result.getString("payment_method") %></td>
+                        <td>Rs.<%= df.format(result.getDouble("subtotal")) %></td>
+                        <td class="discount-cell">-Rs.<%= df.format(result.getDouble("discount")) %></td>
+                        <td class="tax-cell">+Rs.<%= df.format(result.getDouble("tax")) %></td>
+                        <td><strong>Rs.<%= df.format(result.getDouble("total")) %></strong></td>
+                    </tr>
+                    <%
+                                }
+                            } else { 
+                    %>
+                    <tr><td colspan="9" style="text-align:center;">No receipts found</td></tr>
+                    <%
+                            }
+                            conn.close();
+                        } catch (Exception ex) {
+                            out.println("<p class='text-danger text-center'>Error: " + ex.getMessage() + "</p>");
+                        }
+                    %>
+                </tbody>
+            </table>
         </div>
-      </div>
+    </div>
       
       <!-- Pagination -->
       <div style="display: flex; justify-content: center; margin-top: 20px;">
