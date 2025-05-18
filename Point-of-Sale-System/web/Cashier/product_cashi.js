@@ -2,9 +2,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/JavaScript.js to edit this template
  */
-
-// product_cashi.js
-
 document.addEventListener('DOMContentLoaded', function() {
   // Get all product cards
   const productCards = Array.from(document.querySelectorAll('.product-card'));
@@ -138,4 +135,6 @@ async function updateCashierInfo() {
 
 // Call this function when the page loads
 document.addEventListener('DOMContentLoaded', updateCashierInfo);
+
+
 

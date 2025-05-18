@@ -76,7 +76,8 @@
                 <h2>Swift</h2>
             </div>
 
-            <jsp:include page="menu.jsp" />
+  <jsp:include page="menu.jsp" />
+        </div>
 
         <div class="main-content">
             <div class="header">
@@ -93,28 +94,28 @@
             </div>
 
             <div class="quick-actions">
-                <div class="action-card">
-                    <div class="action-icon">
-                        <i class="fas fa-plus-circle" style="color: var(--success);"></i>
-                    </div>
-                    <h3 class="action-title">New Sale</h3>
-                    <p class="action-description">Start a new transaction</p>
+            <a href="cashier_dashboard.jsp" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-plus-circle" style="color: var(--success);"></i>
                 </div>
-                <div class="action-card">
-                    <div class="action-icon">
-                        <i class="fas fa-history" style="color: var(--primary);"></i>
-                    </div>
-                    <h3 class="action-title">Recent Sales</h3>
-                    <p class="action-description">View recent transactions</p>
+                <h3 class="action-title">New Sale</h3>
+                <p class="action-description">Start a new transaction</p>
+            </a>
+            <a href="Cashier_report.jsp" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-history" style="color: var(--primary);"></i>
                 </div>
-                <div class="action-card">
-                    <div class="action-icon">
-                        <i class="fas fa-search" style="color: var(--secondary);"></i>
-                    </div>
-                    <h3 class="action-title">Stock Check</h3>
-                    <p class="action-description">View available products</p>
+                <h3 class="action-title">Recent Sales</h3>
+                <p class="action-description">View recent transactions</p>
+            </a>
+            <a href="products.jsp" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-search" style="color: var(--secondary);"></i>
                 </div>
-            </div>
+                <h3 class="action-title">Stock Check</h3>
+                <p class="action-description">View available products</p>
+            </a>
+        </div>
 
             <div class="modules-container">
                 <div class="module-card"> <%-- Product Module --%>

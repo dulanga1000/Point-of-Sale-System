@@ -4,15 +4,15 @@
  */
 package dao;
 
-import model.Supplier;
+import model.Supplier; // Assuming you have this model
 import util.DBConnection;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types; // For setNull
-import java.math.BigDecimal; // For creditLimit
+import java.sql.Types; 
+import java.math.BigDecimal; 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -21,14 +21,17 @@ import java.util.logging.Logger;
 public class SupplierDAO {
 
     private static final Logger LOGGER = Logger.getLogger(SupplierDAO.class.getName());
-    private static final String INSERT_SUPPLIER_SQL = "INSERT INTO suppliers " +
+    // ... (your existing INSERT_SUPPLIER_SQL and SELECT_ALL_SUPPLIERS_SQL)
+     private static final String INSERT_SUPPLIER_SQL = "INSERT INTO suppliers " +
         "(company_name, category, business_reg_no, tax_id, company_address, " +
         "contact_person, contact_position, contact_phone, contact_email, " +
         "payment_method, payment_terms, credit_limit, delivery_terms, lead_time, " +
-        "product_categories, additional_notes) " +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "product_categories, additional_notes, supplier_status) " + // Added supplier_status
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')"; // Default to Active
 
     private static final String SELECT_ALL_SUPPLIERS_SQL = "SELECT * FROM suppliers ORDER BY company_name ASC";
+    private static final String SELECT_SUPPLIER_EMAIL_BY_ID_SQL = "SELECT contact_email FROM suppliers WHERE supplier_id = ?";
+
 
     public boolean addSupplier(Supplier supplier) {
         Connection connection = null;
@@ -76,13 +79,14 @@ public class SupplierDAO {
 
             preparedStatement.setString(13, supplier.getDeliveryTerms());
             preparedStatement.setInt(14, supplier.getLeadTime());
-            preparedStatement.setString(15, supplier.getProductCategories() != null ? supplier.getProductCategories() : ""); // Ensure not null
-
+            preparedStatement.setString(15, supplier.getProductCategories() != null ? supplier.getProductCategories() : ""); 
+            
             if (supplier.getAdditionalNotes() != null && !supplier.getAdditionalNotes().trim().isEmpty()) {
                 preparedStatement.setString(16, supplier.getAdditionalNotes());
             } else {
                  preparedStatement.setNull(16, Types.VARCHAR);
             }
+            // supplier_status is set to 'Active' by default in the SQL
 
             int affectedRows = preparedStatement.executeUpdate();
             rowInserted = (affectedRows > 0);
@@ -94,14 +98,10 @@ public class SupplierDAO {
 
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "SQL Error adding supplier: " + (supplier != null ? supplier.getCompanyName() : "NULL Supplier Object"), e);
-            rowInserted = false; // Explicitly set to false on error
+            rowInserted = false; 
         } finally {
             if (preparedStatement != null) {
-                try {
-                    preparedStatement.close();
-                } catch (SQLException e) {
-                    LOGGER.log(Level.WARNING, "Error closing PreparedStatement.", e);
-                }
+                try { preparedStatement.close(); } catch (SQLException e) { LOGGER.log(Level.WARNING, "Error closing PreparedStatement.", e); }
             }
             DBConnection.closeConnection(connection);
         }
@@ -119,7 +119,7 @@ public class SupplierDAO {
             connection = DBConnection.getConnection();
             if (connection == null) {
                 LOGGER.severe("Failed to obtain database connection in getAllSuppliers.");
-                return suppliers; // Return empty list
+                return suppliers;
             }
             preparedStatement = connection.prepareStatement(SELECT_ALL_SUPPLIERS_SQL);
             resultSet = preparedStatement.executeQuery();
@@ -137,7 +137,7 @@ public class SupplierDAO {
                 supplier.setContactPerson(resultSet.getString("contact_person"));
                 supplier.setContactPosition(resultSet.getString("contact_position"));
                 supplier.setContactPhone(resultSet.getString("contact_phone"));
-                supplier.setContactEmail(resultSet.getString("contact_email"));
+                supplier.setContactEmail(resultSet.getString("contact_email")); // Make sure this column exists
                 supplier.setPaymentMethod(resultSet.getString("payment_method"));
                 supplier.setPaymentTerms(resultSet.getString("payment_terms"));
                 supplier.setCreditLimit(resultSet.getBigDecimal("credit_limit"));
@@ -146,6 +146,7 @@ public class SupplierDAO {
                 supplier.setProductCategories(resultSet.getString("product_categories"));
                 supplier.setAdditionalNotes(resultSet.getString("additional_notes"));
                 supplier.setCreatedAt(resultSet.getTimestamp("created_at"));
+                // supplier.setSupplierStatus(resultSet.getString("supplier_status")); // Assuming you add this to your model
                 suppliers.add(supplier);
                 count++;
             }
@@ -153,23 +154,50 @@ public class SupplierDAO {
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "SQL Error retrieving all suppliers.", e);
         } finally {
-            // Close resources in reverse order of creation
-            if (resultSet != null) {
-                try {
-                    resultSet.close();
-                } catch (SQLException e) {
-                    LOGGER.log(Level.WARNING, "Error closing ResultSet.", e);
-                }
-            }
-            if (preparedStatement != null) {
-                try {
-                    preparedStatement.close();
-                } catch (SQLException e) {
-                    LOGGER.log(Level.WARNING, "Error closing PreparedStatement.", e);
-                }
-            }
+            if (resultSet != null) { try { resultSet.close(); } catch (SQLException e) { LOGGER.log(Level.WARNING, "Error closing ResultSet.", e); }}
+            if (preparedStatement != null) { try { preparedStatement.close(); } catch (SQLException e) { LOGGER.log(Level.WARNING, "Error closing PreparedStatement.", e); }}
             DBConnection.closeConnection(connection);
         }
         return suppliers;
+    }
+
+    /**
+     * Retrieves the contact email of a supplier by their ID.
+     * @param supplierId The ID of the supplier.
+     * @return The supplier's contact email, or null if not found or an error occurs.
+     */
+    public String getSupplierEmailById(int supplierId) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        String email = null;
+        LOGGER.info("Attempting to retrieve email for supplier ID: " + supplierId);
+
+        try {
+            connection = DBConnection.getConnection();
+            if (connection == null) {
+                LOGGER.severe("Failed to obtain database connection in getSupplierEmailById.");
+                return null;
+            }
+            preparedStatement = connection.prepareStatement(SELECT_SUPPLIER_EMAIL_BY_ID_SQL);
+            preparedStatement.setInt(1, supplierId);
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                email = resultSet.getString("contact_email"); // Ensure this column name matches your DB
+            }
+            if (email != null) {
+                LOGGER.info("Email found for supplier ID " + supplierId + ": " + email);
+            } else {
+                LOGGER.warning("No email found for supplier ID " + supplierId);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "SQL Error retrieving supplier email for ID: " + supplierId, e);
+        } finally {
+            if (resultSet != null) { try { resultSet.close(); } catch (SQLException e) { LOGGER.log(Level.WARNING, "Error closing ResultSet.", e); }}
+            if (preparedStatement != null) { try { preparedStatement.close(); } catch (SQLException e) { LOGGER.log(Level.WARNING, "Error closing PreparedStatement.", e); }}
+            DBConnection.closeConnection(connection);
+        }
+        return email;
     }
 }

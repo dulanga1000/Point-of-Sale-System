@@ -9,18 +9,15 @@
 <%@ page import="java.util.*" %>
 <%@ page import="java.time.LocalTime" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
-<%@ page import="java.sql.*" %>
-<%@ page import="java.util.*" %>
-<%@ page import="java.time.LocalTime" %>
-<%@ page import="java.time.format.DateTimeFormatter" %>
+<%-- Removed duplicate imports --%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Supplier Management - Swift POS</title>
-  <script src="script.js"></script>
-  <link rel="Stylesheet" href="styles.css">
+  <script src="script.js"></script> <%-- Ensure script.js is accessible --%>
+  <link rel="Stylesheet" href="Admin/styles.css"> <%-- Ensure styles.css is accessible --%>
     <style>
     /* Additional styles for the supplier dashboard */
     .search-filter-bar {
@@ -292,10 +289,30 @@
         justify-content: space-between;
       }
     }
+
+    /* Styles for feedback messages */
+    .feedback-message {
+      padding: 15px;
+      margin-bottom: 20px;
+      border: 1px solid transparent;
+      border-radius: .25rem; /* Bootstrap-like border radius */
+      font-size: 1rem;
+      text-align: center;
+    }
+    .feedback-message.success {
+      color: #155724;
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+    }
+    .feedback-message.error {
+      color: #721c24;
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
+    }
+
   </style>
 </head>
 <body>
-  <!-- Mobile Top Bar (visible on mobile only) -->
   <div class="mobile-top-bar">
     <div class="mobile-logo">
       <img src="${pageContext.request.contextPath}/Images/logo.png" alt="POS Logo">
@@ -305,7 +322,6 @@
   </div>
   
   <div class="dashboard">
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
       <div class="logo">
         <img src="${pageContext.request.contextPath}/Images/logo.png" alt="POS Logo">
@@ -314,7 +330,6 @@
       <jsp:include page="menu.jsp" />
     </div>
     
-    <!-- Main Content -->
     <div class="main-content">
       <div class="header">
         <h1 class="page-title">Supplier Management</h1>
@@ -355,7 +370,25 @@
         </div>
       </div>
       
-      <!-- Stats Cards -->
+      <%
+          String feedbackMessage = (String) request.getAttribute("feedbackMessage");
+          String errorMessage = (String) request.getAttribute("errorMessage");
+
+          if (feedbackMessage != null) {
+      %>
+          <div class="feedback-message success" role="alert">
+              <%= feedbackMessage %>
+          </div>
+      <%
+          }
+          if (errorMessage != null) {
+      %>
+          <div class="feedback-message error" role="alert">
+              <%= errorMessage %>
+          </div>
+      <%
+          }
+      %>
       <div class="stats-container">
         <div class="stat-card">
           <h3>TOTAL SUPPLIERS</h3>
@@ -402,14 +435,13 @@
         </div>
       </div>
       
-      <!-- Actions and Suppliers List -->
       <div class="modules-container">
         <div class="module-card">
           <div class="module-header">
             Supplier Actions
           </div>
           <div class="module-content">
-            <div class="module-action" data-page="add_supplier.jsp">
+            <div class="module-action" data-page="add_supplier.jsp"> <%-- Consider path: ${pageContext.request.contextPath}/Admin/add_supplier.jsp if add_supplier.jsp is in Admin folder --%>
               <div class="action-icon">➕</div>
               <div class="action-text">
                 <h4>Add New Supplier</h4>
@@ -493,13 +525,11 @@
         </div>
       </div>
       
-      <!-- Supplier List Table -->
       <div class="module-card" style="margin-top: 20px;">
         <div class="module-header">
           Supplier Directory
         </div>
         <div class="module-content">
-          <!-- Search and Filter Bar -->
           <div class="search-filter-bar">
             <div class="search-container">
               <input type="text" placeholder="Search suppliers..." class="search-input">
@@ -524,7 +554,7 @@
                 <option value="inactive">Inactive</option>
               </select>
             </div>
-            <button class="add-supplier-btn" data-page="add_supplier.jsp">
+            <button class="add-supplier-btn" data-page="add_supplier.jsp"> <%-- Consider path: ${pageContext.request.contextPath}/Admin/add_supplier.jsp --%>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -548,10 +578,15 @@
             </thead>
             <tbody>
                 <%
-
+    // Re-use DB connection details from above if possible, or redefine
+    // String URL = "jdbc:mysql://localhost:3306/Swift_Database"; // Already defined
+    // String USER = "root"; // Already defined
+    // String PASSWORD = ""; // Already defined
+    Connection conn = null;
     try {
-        Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-        PreparedStatement sql = conn.prepareStatement("SELECT * FROM suppliers");
+        // Class.forName("com.mysql.jdbc.Driver"); // Already loaded for user profile
+        conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        PreparedStatement sql = conn.prepareStatement("SELECT * FROM suppliers"); // Ensure table and column names are correct
         ResultSet result = sql.executeQuery();
 
         while (result.next()) { %>
@@ -561,8 +596,8 @@
                 <td><%= result.getString("category") %></td>
                 <td><%= result.getString("contact_person") %></td>
                 <td><%= result.getString("contact_phone") %></td>
-                <td><%= result.getString("lead_time") %></td>
-                <td><span class="status completed"><%= result.getString("supplier_status") %></span></td>
+                <td><%= result.getString("lead_time") %> days</td> <%-- Assuming lead_time is what's meant by Last Order here or needs adjustment --%>
+                <td><span class="status completed"><%= result.getString("supplier_status") != null ? result.getString("supplier_status") : "Active" %></span></td> <%-- Added null check for status --%>
                 <td class="action-buttons">
                   <button class="action-btn edit-btn" title="Edit">✏️</button>
                   <button class="action-btn view-btn" title="View Details">👁️</button>
@@ -570,16 +605,25 @@
                 </td>
               </tr>
               <% }
-        conn.close();
+        result.close();
+        sql.close();
     } catch (Exception ex) {
-        out.println("<p class='text-danger text-center'>Error: " + ex.getMessage() + "</p>");
+        out.println("<tr><td colspan='8' class='text-danger text-center'>Error loading suppliers: " + ex.getMessage() + "</td></tr>");
+        ex.printStackTrace(); // For server logs
+    } finally {
+        if (conn != null) {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 %>
               
             </tbody>
           </table>
           
-          <!-- Pagination -->
           <div class="pagination">
             <button class="pagination-btn" disabled>Previous</button>
             <div class="page-numbers">
@@ -594,7 +638,6 @@
         </div>
       </div>
       
-      <!-- Supply Chain Health -->
       <div class="module-card" style="margin-top: 20px;">
         <div class="module-header">
           Supply Chain Health
@@ -698,23 +741,48 @@
       action.addEventListener('click', function() {
         const targetPage = this.getAttribute('data-page');
         if (targetPage) {
-          window.location.href = targetPage;
+          // If add_supplier.jsp is in /Admin folder, adjust path:
+          // if (targetPage === 'add_supplier.jsp') {
+          //   window.location.href = '${pageContext.request.contextPath}/Admin/add_supplier.jsp';
+          // } else {
+          //   window.location.href = targetPage;
+          // }
+          // For now, assuming targetPage is correct as is or relative to current page/context root
+          window.location.href = targetPage; 
         }
       });
     });
     
-    // Add some interactivity for demonstration
-    document.querySelectorAll('.add-supplier-btn, .action-btn').forEach(button => {
+    // Interactivity for Add Supplier buttons
+    // Ensure this navigates to the correct Add Supplier form page
+    document.querySelectorAll('.add-supplier-btn').forEach(button => {
       button.addEventListener('click', function() {
-         window.location.href = 'add_supplier.jsp';
+          // If your add_supplier.jsp is in the /Admin folder, use:
+          // window.location.href = '${pageContext.request.contextPath}/Admin/add_supplier.jsp';
+          // If it's at the root or same directory as suppliers.jsp:
+          window.location.href = 'add_supplier.jsp'; 
       });
     });
     
+    // Action buttons in table (Edit, View, Order) - currently not functional, for demonstration
+    document.querySelectorAll('.action-btn.edit-btn, .action-btn.view-btn, .action-btn.order-btn').forEach(button => {
+        button.addEventListener('click', function(event) {
+            // Prevent default if these were links or form submit buttons
+            // event.preventDefault(); 
+            // Example: Get supplier ID from the row
+            // const supplierId = event.target.closest('tr').cells[0].textContent;
+            // console.log("Action on supplier ID: ", supplierId, "Action: ", this.title);
+            // Implement actual edit/view/order logic here or navigate
+            alert('Action: ' + this.title + ' (functionality to be implemented)');
+        });
+    });
     
     document.querySelectorAll('.page-btn:not(.active)').forEach(button => {
       button.addEventListener('click', function() {
-        document.querySelector('.page-btn.active').classList.remove('active');
+        const currentActive = document.querySelector('.page-btn.active');
+        if(currentActive) currentActive.classList.remove('active');
         this.classList.add('active');
+        // Add logic to fetch and display data for the new page
       });
     });
   </script>

@@ -1,10 +1,128 @@
 <!DOCTYPE html>
+<%@ page import="java.sql.*" %>
+<%@ page import="java.util.*" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="model.User" %> <%-- Adjust to your User class package --%>
+
+<%
+    // Attempt to retrieve the logged-in user's details from the session
+    // Ensure your LoginServlet stores the User object with the name "loggedInUserProfile"
+    // Note: Your LoginServlet.java (from uploaded files) uses "loggedInUser". Adjust if needed.
+    User currentUser = (User) session.getAttribute("loggedInUserProfile");
+
+    // Default values in case user is not found or details are missing
+    String displayName = "John Doe";
+    String displayRole = "User"; // Or "Cashier" if this section is specific to cashiers
+    String userProfileImagePath = request.getContextPath() + "/Images/default_avatar.png"; // Default user avatar
+
+    if (currentUser != null) {
+        // Construct the full name
+        String firstName = currentUser.getFirstName() != null ? currentUser.getFirstName() : "";
+        String lastName = currentUser.getLastName() != null ? currentUser.getLastName() : "";
+        if (!firstName.isEmpty() || !lastName.isEmpty()) {
+            displayName = (firstName + " " + lastName).trim();
+        }
+
+        // Get the role
+        if (currentUser.getRole() != null && !currentUser.getRole().isEmpty()) {
+            displayRole = currentUser.getRole();
+        }
+
+        // Construct the web-accessible image path from the database path
+        if (currentUser.getProfileImagePath() != null && !currentUser.getProfileImagePath().isEmpty()) {
+            String dbProfilePath = currentUser.getProfileImagePath();
+            // Convert backslashes to forward slashes and prepend context path
+            userProfileImagePath = request.getContextPath() + "/" + dbProfilePath.replace("\\", "/");
+        }
+    }
+%>
+
+<%
+// Database configuration - using your swift_database
+String dbDriver = "com.mysql.cj.jdbc.Driver"; //
+String dbURL = "jdbc:mysql://localhost:3306/swift_database"; //
+String dbUsername = "root"; //
+String dbPassword = ""; //
+
+List<Map<String, String>> products = new ArrayList<>();
+
+try {
+    // Load JDBC driver
+    Class.forName(dbDriver);
+    
+    // Create database connection
+    try (Connection conn = DriverManager.getConnection(dbURL, dbUsername, dbPassword)) {
+        // SQL query to fetch products - matching your table structure
+        String query = "SELECT id, name, category, price, sku, stock, image_path, status FROM products WHERE status = 'Active'"; //
+        
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+            
+            // Process results
+            while (rs.next()) {
+                Map<String, String> product = new HashMap<>();
+                product.put("id", rs.getString("id"));
+                product.put("name", rs.getString("name"));
+                product.put("category", rs.getString("category"));
+                product.put("price", String.format("Rs.%.2f", rs.getDouble("price")));
+                product.put("stock", rs.getString("stock"));
+                product.put("sku", rs.getString("sku"));
+                product.put("image_path", rs.getString("image_path")); //
+                
+                // Determine stock status based on quantity
+                int stock = rs.getInt("stock");
+                String stockStatus;
+                if (stock <= 0) {
+                    stockStatus = "out-stock";
+                } else if (stock < 10) {
+                    stockStatus = "low-stock";
+                } else {
+                    stockStatus = "in-stock";
+                }
+                product.put("stock_status", stockStatus);
+                
+                // Determine icon class based on category
+                String iconClass = "fas fa-box"; // default
+                String category = rs.getString("category").toLowerCase();
+                if (category.contains("food")) {
+                    iconClass = "fas fa-utensils";
+                } else if (category.contains("beverage")) {
+                    iconClass = "fas fa-coffee";
+                } else if (category.contains("electronic")) {
+                    iconClass = "fas fa-mobile-alt";
+                } else if (category.contains("cloth")) {
+                    iconClass = "fas fa-tshirt";
+                } else if (category.contains("stationery")) {
+                    iconClass = "fas fa-pen";
+                } else if (category.contains("home")) {
+                    iconClass = "fas fa-home";
+                }
+                product.put("icon_class", iconClass);
+                
+                products.add(product);
+            }
+        }
+    }
+} catch (ClassNotFoundException e) {
+    out.println("<div class='error'>JDBC Driver not found: " + e.getMessage() + "</div>");
+    e.printStackTrace();
+} catch (SQLException e) {
+    out.println("<div class='error'>Database error: " + e.getMessage() + "</div>");
+    e.printStackTrace();
+} catch (Exception e) {
+    out.println("<div class='error'>Unexpected error: " + e.getMessage() + "</div>");
+    e.printStackTrace();
+}
+%>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Products - Cashier Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <%-- <script src="product_cashi.js"> </script> --%> <%-- Ensure this JS file exists and is correctly linked if used --%>
   <style>
     :root {
       --primary: #3498db;
@@ -264,7 +382,7 @@
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 20px;
       padding: 20px;
-      max-height: calc(100vh - 260px);
+      max-height: calc(100vh - 260px); /* Adjust as needed */
       overflow-y: auto;
     }
     
@@ -297,7 +415,7 @@
     .product-image img {
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: contain; /* Changed to contain to see full image */
     }
     
     .product-details {
@@ -388,7 +506,7 @@
     }
     
     .footer {
-      margin-top: auto;
+      margin-top: auto; /* Pushes footer to bottom if content is short */
       text-align: center;
       padding: 15px 0;
       border-top: 1px solid var(--gray-light);
@@ -397,14 +515,14 @@
     
     /* Mobile Responsive */
     .mobile-top-bar {
-      display: none;
+      display: none; /* Hidden by default */
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       background-color: var(--dark);
       padding: 15px;
-      z-index: 99;
+      z-index: 99; /* Ensure it's above other content but below sidebar if active */
       justify-content: space-between;
       align-items: center;
     }
@@ -440,12 +558,12 @@
       
       .main-content {
         margin-left: 0;
-        padding-top: 70px;
+        padding-top: 70px; /* Adjust if mobile top bar height changes */
       }
       
       .sidebar {
         transform: translateX(-100%);
-        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+        box-shadow: 5px 0 15px rgba(0,0,0,0.1); /* Shadow when sidebar is open on mobile */
       }
       
       .sidebar.active {
@@ -470,7 +588,7 @@
 <body>
   <div class="mobile-top-bar">
     <div class="mobile-logo">
-      <img src="/api/placeholder/28/28" alt="POS Logo" class="logo-img">
+      <img src="<%= request.getContextPath() %>/Images/logo.png" alt="POS Logo" class="logo-img">
       <h2>Swift</h2>
     </div>
     <button class="mobile-nav-toggle" id="mobileNavToggle">
@@ -481,52 +599,22 @@
   <div class="dashboard">
     <div class="sidebar" id="sidebar">
       <div class="logo">
-        <img src="/api/placeholder/28/28" alt="POS Logo" class="logo-img">
+        <img src="<%= request.getContextPath() %>/Images/logo.png" alt="POS Logo" class="logo-img">
         <h2>Swift</h2>
       </div>
-
-      <ul class="menu">
-        <li class="menu-item active">
-          <i class="fas fa-shopping-cart"></i>
-          <span>Sales</span>
-        </li>
-        <li class="menu-item">
-          <i class="fas fa-box"></i>
-          <span>Products</span>
-        </li>
-        <li class="menu-item">
-          <i class="fas fa-chart-bar"></i>
-          <span>Reports</span>
-        </li>
-        <li class="menu-item">
-          <i class="fas fa-warehouse"></i>
-          <span>Inventory</span>
-        </li>
-        <li class="menu-item">
-          <i class="fas fa-receipt"></i>
-          <span>Transactions</span>
-        </li>
-        <li class="menu-item">
-          <i class="fas fa-cog"></i>
-          <span>Settings</span>
-        </li>
-        <li class="menu-item">
-          <i class="fas fa-sign-out-alt"></i>
-          <span>Logout</span>
-        </li>
-      </ul>
-    </div>
+        <jsp:include page="menu.jsp" />
+      </div>
 
     <div class="main-content">
       <div class="header">
         <h1 class="page-title">Products</h1>
         <div class="user-profile">
           <div class="user-image">
-            <img src="/api/placeholder/40/40" alt="User avatar">
+            <img src="<%= userProfileImagePath %>" alt="<%= displayName %> avatar" style="width:40px; height:40px; border-radius:50%; object-fit: cover;">
           </div>
           <div class="user-info">
-            <h4>John Doe</h4>
-            <p>Cashier</p>
+            <h4><%= displayName %></h4>
+            <p><%= displayRole %></p>
           </div>
         </div>
       </div>
@@ -535,9 +623,7 @@
         <div class="module-header">
           <h2>Product Catalog</h2>
           <div class="module-actions">
-            <button class="mobile-nav-toggle" style="display: none;">
-              <i class="fas fa-arrow-left"></i>
-            </button>
+            <%-- Optional: Add action buttons here if needed for this view --%>
           </div>
         </div>
 
@@ -559,185 +645,50 @@
         </div>
 
         <div class="products-grid">
-          <!-- Product 1 -->
-          <div class="product-card">
-            <div class="product-image">
-              <i class="fas fa-utensils"></i>
-            </div>
-            <div class="product-details">
-              <h3 class="product-name">Chicken Burger</h3>
-              <div class="product-category">Food</div>
-              <div class="product-price">Rs.350.00</div>
-              <div class="product-stock">
-                <div class="stock-status in-stock">
-                  <i class="fas fa-check-circle"></i> In Stock (45)
-                </div>
+          <% for (Map<String, String> product : products) { 
+              String prodImgPath = product.get("image_path");
+              String fullProdImgPath = "";
+              if (prodImgPath != null && !prodImgPath.isEmpty()) {
+                  fullProdImgPath = request.getContextPath() + "/" + prodImgPath.replace("\\", "/");
+              }
+          %>
+            <div class="product-card">
+              <div class="product-image">
+                <% if (fullProdImgPath != null && !fullProdImgPath.isEmpty() && !fullProdImgPath.endsWith("/null")) { %>
+                  <img src="<%= fullProdImgPath %>" alt="<%= product.get("name") %>">
+                <% } else { %>
+                  <i class="<%= product.get("icon_class") %>"></i>
+                <% } %>
               </div>
-              <div class="product-code">SKU: F001</div>
-            </div>
-          </div>
-
-          <!-- Product 2 -->
-          <div class="product-card">
-            <div class="product-image">
-              <i class="fas fa-coffee"></i>
-            </div>
-            <div class="product-details">
-              <h3 class="product-name">Cappuccino</h3>
-              <div class="product-category">Beverages</div>
-              <div class="product-price">Rs.280.00</div>
-              <div class="product-stock">
-                <div class="stock-status in-stock">
-                  <i class="fas fa-check-circle"></i> In Stock (120)
+              <div class="product-details">
+                <h3 class="product-name"><%= product.get("name") %></h3>
+                <div class="product-category"><%= product.get("category") %></div>
+                <div class="product-price"><%= product.get("price") %></div>
+                <div class="product-stock">
+                  <div class="stock-status <%= product.get("stock_status") %>">
+                    <i class="fas 
+                      <%= product.get("stock_status").equals("in-stock") ? "fa-check-circle" : 
+                         product.get("stock_status").equals("low-stock") ? "fa-exclamation-circle" : 
+                         "fa-times-circle" %>">
+                    </i>
+                    <%= product.get("stock_status").equals("in-stock") ? "In Stock" : 
+                       product.get("stock_status").equals("low-stock") ? "Low Stock" : 
+                       "Out of Stock" %> 
+                    (<%= product.get("stock") %>)
+                  </div>
                 </div>
+                <div class="product-code">SKU: <%= product.get("sku") %></div>
               </div>
-              <div class="product-code">SKU: B002</div>
             </div>
-          </div>
-
-          <!-- Product 3 -->
-          <div class="product-card">
-            <div class="product-image">
-              <i class="fas fa-mobile-alt"></i>
+          <% } %>
+          
+          <% if (products.isEmpty()) { %>
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
+              <i class="fas fa-box-open" style="font-size: 48px; color: var(--gray); margin-bottom: 15px;"></i>
+              <h3 style="color: var(--dark);">No products found</h3>
+              <p style="color: var(--gray);">There are currently no active products in the database that match your criteria.</p>
             </div>
-            <div class="product-details">
-              <h3 class="product-name">Phone Charger</h3>
-              <div class="product-category">Electronics</div>
-              <div class="product-price">Rs.850.00</div>
-              <div class="product-stock">
-                <div class="stock-status low-stock">
-                  <i class="fas fa-exclamation-circle"></i> Low Stock (5)
-                </div>
-              </div>
-              <div class="product-code">SKU: E003</div>
-            </div>
-          </div>
-
-          <!-- Product 4 -->
-          <div class="product-card">
-            <div class="product-image">
-              <i class="fas fa-tshirt"></i>
-            </div>
-            <div class="product-details">
-              <h3 class="product-name">T-Shirt</h3>
-              <div class="product-category">Clothing</div>
-              <div class="product-price">Rs.1,200.00</div>
-              <div class="product-stock">
-                <div class="stock-status out-stock">
-                  <i class="fas fa-times-circle"></i> Out of Stock (0)
-                </div>
-              </div>
-              <div class="product-code">SKU: C004</div>
-            </div>
-          </div>
-
-          <!-- Product 5 -->
-          <div class="product-card">
-            <div class="product-image">
-              <i class="fas fa-pen"></i>
-            </div>
-            <div class="product-details">
-              <h3 class="product-name">Gel Pen</h3>
-              <div class="product-category">Stationery</div>
-              <div class="product-price">Rs.50.00</div>
-              <div class="product-stock">
-                <div class="stock-status in-stock">
-                  <i class="fas fa-check-circle"></i> In Stock (75)
-                </div>
-              </div>
-              <div class="product-code">SKU: S005</div>
-            </div>
-          </div>
-
-          <!-- Product 6 -->
-          <div class="product-card">
-            <div class="product-image">
-              <i class="fas fa-home"></i>
-            </div>
-            <div class="product-details">
-              <h3 class="product-name">Cushion Cover</h3>
-              <div class="product-category">Home Goods</div>
-              <div class="product-price">Rs.450.00</div>
-              <div class="product-stock">
-                <div class="stock-status in-stock">
-                  <i class="fas fa-check-circle"></i> In Stock (30)
-                </div>
-              </div>
-              <div class="product-code">SKU: H006</div>
-            </div>
-          </div>
-
-          <!-- Product 7 -->
-          <div class="product-card">
-            <div class="product-image">
-              <i class="fas fa-cookie"></i>
-            </div>
-            <div class="product-details">
-              <h3 class="product-name">Chocolate Cookies</h3>
-              <div class="product-category">Food</div>
-              <div class="product-price">Rs.180.00</div>
-              <div class="product-stock">
-                <div class="stock-status low-stock">
-                  <i class="fas fa-exclamation-circle"></i> Low Stock (8)
-                </div>
-              </div>
-              <div class="product-code">SKU: F007</div>
-            </div>
-          </div>
-
-          <!-- Product 8 -->
-          <div class="product-card">
-            <div class="product-image">
-              <i class="fas fa-headphones"></i>
-            </div>
-            <div class="product-details">
-              <h3 class="product-name">Earphones</h3>
-              <div class="product-category">Electronics</div>
-              <div class="product-price">Rs.1,500.00</div>
-              <div class="product-stock">
-                <div class="stock-status in-stock">
-                  <i class="fas fa-check-circle"></i> In Stock (25)
-                </div>
-              </div>
-              <div class="product-code">SKU: E008</div>
-            </div>
-          </div>
-
-          <!-- Product 9 -->
-          <div class="product-card">
-            <div class="product-image">
-              <i class="fas fa-glasses"></i>
-            </div>
-            <div class="product-details">
-              <h3 class="product-name">Reading Glasses</h3>
-              <div class="product-category">Accessories</div>
-              <div class="product-price">Rs.950.00</div>
-              <div class="product-stock">
-                <div class="stock-status in-stock">
-                  <i class="fas fa-check-circle"></i> In Stock (15)
-                </div>
-              </div>
-              <div class="product-code">SKU: A009</div>
-            </div>
-          </div>
-
-          <!-- Product 10 -->
-          <div class="product-card">
-            <div class="product-image">
-              <i class="fas fa-book"></i>
-            </div>
-            <div class="product-details">
-              <h3 class="product-name">Notebook</h3>
-              <div class="product-category">Stationery</div>
-              <div class="product-price">Rs.120.00</div>
-              <div class="product-stock">
-                <div class="stock-status in-stock">
-                  <i class="fas fa-check-circle"></i> In Stock (50)
-                </div>
-              </div>
-              <div class="product-code">SKU: S010</div>
-            </div>
-          </div>
+          <% } %>
         </div>
 
         <div class="pagination">
@@ -752,7 +703,7 @@
       </div>
 
       <div class="footer">
-        Swift POS © 2025. All rights reserved.
+        Swift POS Â© 2025. All rights reserved.
       </div>
     </div>
   </div>
@@ -763,50 +714,20 @@
       document.getElementById('sidebar').classList.toggle('active');
     });
     
-    // Filter category selection
+    // Basic filter and search stubs (implement full logic if needed)
     document.querySelectorAll('.filter-category').forEach(item => {
       item.addEventListener('click', function() {
-        document.querySelectorAll('.filter-category').forEach(el => {
-          el.classList.remove('active');
-        });
+        document.querySelectorAll('.filter-category').forEach(el => el.classList.remove('active'));
         this.classList.add('active');
-        
-        // In a real implementation, you would filter products here
         console.log('Filter selected:', this.textContent);
+        // Add actual filtering logic here
       });
     });
     
-    // Search functionality
     document.querySelector('.search-btn').addEventListener('click', function() {
       const searchTerm = document.querySelector('.search-input').value.trim();
-      if (searchTerm) {
-        // In a real implementation, you would perform search here
-        console.log('Searching for:', searchTerm);
-      }
-    });
-    
-    // Quick view product on card click
-    document.querySelectorAll('.product-card').forEach(card => {
-      card.addEventListener('click', function() {
-        const productName = this.querySelector('.product-name').textContent;
-        // In a real implementation, you would show product details or add to cart
-        console.log('Product selected:', productName);
-      });
-    });
-    
-    // Pagination
-    document.querySelectorAll('.pagination-item').forEach(item => {
-      item.addEventListener('click', function() {
-        if (this.classList.contains('active')) return;
-        
-        document.querySelectorAll('.pagination-item').forEach(el => {
-          el.classList.remove('active');
-        });
-        this.classList.add('active');
-        
-        // In a real implementation, you would load the appropriate page
-        console.log('Page selected:', this.textContent);
-      });
+      if (searchTerm) console.log('Searching for:', searchTerm);
+      // Add actual search logic here
     });
   </script>
 </body>

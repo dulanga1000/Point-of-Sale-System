@@ -392,36 +392,6 @@
             color: #6c757d;           /* Grey color for role */
             display: block;           /* Ensure it's on its own line if needed */
         }
-        .menu {
-  list-style: none;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  padding: 12px 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.menu-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.menu-item.active {
-  background-color: var(--primary);
-}
-
-.menu-item i {
-  margin-right: 15px;
-  width: 20px;
-  text-align: center;
-}
-
-.menu-item span {
-  font-weight: 500;
-}
-
     </style>
 </head>
 <body>
@@ -441,39 +411,8 @@
                 <img src="<%= request.getContextPath() %>/Images/logo.png" alt="POS Logo" class="logo-img"> <%-- Use context path --%>
                 <h2>Swift</h2>
             </div>
+                <jsp:include page="menu.jsp" />
 
-            <ul class="menu">
-                <li class="menu-item active">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>Sales</span>
-                </li>
-                <li class="menu-item">
-                    <i class="fas fa-box"></i>
-                    <span>Products</span>
-                </li>
-                <li class="menu-item">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Reports</span>
-                </li>
-                <li class="menu-item">
-                    <i class="fas fa-warehouse"></i>
-                    <span>Inventory</span>
-                </li>
-                <li class="menu-item">
-                    <i class="fas fa-receipt"></i>
-                    <span>Transactions</span>
-                </li>
-                <li class="menu-item">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </li>
-                <li class="menu-item">
-                    <a href="${pageContext.request.contextPath}/logoutAction" style="text-decoration: none; color: inherit;">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </a>
-                </li>
-            </ul>
         </div>
  <div class="main-content">
       <div class="header">

@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-// Removed duplicate Logger import
 
 @WebServlet("/addSupplier")
 public class AddSupplierServlet extends HttpServlet {
@@ -35,10 +34,9 @@ public class AddSupplierServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        String addSupplierJsp = "/Admin/add_supplier.jsp"; // Path relative to context root
+        String targetJsp = "/Admin/suppliers.jsp"; // Target JSP for feedback
 
         try {
-            // ... (your existing parameter retrieval and validation logic) ...
             String companyName = request.getParameter("companyName");
             String category = request.getParameter("supplierCategory");
             String businessRegNo = request.getParameter("businessRegNo");
@@ -53,16 +51,16 @@ public class AddSupplierServlet extends HttpServlet {
             String creditLimitStr = request.getParameter("creditLimit");
             String deliveryTerms = request.getParameter("deliveryTerms");
             String leadTimeStr = request.getParameter("leadTime");
-            String productCategories = request.getParameter("hiddenProductCategories"); // Ensure this is correctly populated by JS
+            String productCategories = request.getParameter("hiddenProductCategories");
             String additionalNotes = request.getParameter("additionalNotes");
 
             // Basic validation
             if (isEmpty(companyName) || isEmpty(category) || isEmpty(businessRegNo) || isEmpty(companyAddress) ||
                 isEmpty(contactPerson) || isEmpty(contactPhone) || isEmpty(contactEmail) || isEmpty(paymentMethod) ||
                 isEmpty(paymentTerms) || isEmpty(deliveryTerms) || isEmpty(leadTimeStr) ||
-                isEmpty(productCategories) ) { // Check productCategories explicitly
+                isEmpty(productCategories) ) {
                 request.setAttribute("errorMessage", "All required fields must be filled.");
-                request.getRequestDispatcher(addSupplierJsp).forward(request, response);
+                request.getRequestDispatcher(targetJsp).forward(request, response);
                 return;
             }
             
@@ -72,29 +70,28 @@ public class AddSupplierServlet extends HttpServlet {
                 if (leadTime <= 0) throw new NumberFormatException("Lead time must be positive.");
             } catch (NumberFormatException e) {
                 request.setAttribute("errorMessage", "Invalid Lead Time: Must be a positive number.");
-                request.getRequestDispatcher(addSupplierJsp).forward(request, response);
+                request.getRequestDispatcher(targetJsp).forward(request, response);
                 return;
             }
 
             BigDecimal creditLimit = null;
-            if ("credit".equalsIgnoreCase(paymentTerms)) { // Use equalsIgnoreCase for safety
+            if ("credit".equalsIgnoreCase(paymentTerms)) {
                 if (isEmpty(creditLimitStr)) {
-                     request.setAttribute("errorMessage", "Credit Limit is required when payment terms are 'Credit'.");
-                     request.getRequestDispatcher(addSupplierJsp).forward(request, response);
-                     return;
+                    request.setAttribute("errorMessage", "Credit Limit is required when payment terms are 'Credit'.");
+                    request.getRequestDispatcher(targetJsp).forward(request, response);
+                    return;
                 }
-                 try {
-                     creditLimit = new BigDecimal(creditLimitStr);
-                     if(creditLimit.compareTo(BigDecimal.ZERO) < 0) {
-                         throw new NumberFormatException("Credit limit cannot be negative.");
-                     }
-                 } catch (NumberFormatException e) {
-                     request.setAttribute("errorMessage", "Invalid Credit Limit format.");
-                     request.getRequestDispatcher(addSupplierJsp).forward(request, response);
-                     return;
-                 }
+                try {
+                    creditLimit = new BigDecimal(creditLimitStr);
+                    if(creditLimit.compareTo(BigDecimal.ZERO) < 0) {
+                        throw new NumberFormatException("Credit limit cannot be negative.");
+                    }
+                } catch (NumberFormatException e) {
+                    request.setAttribute("errorMessage", "Invalid Credit Limit format: " + e.getMessage());
+                    request.getRequestDispatcher(targetJsp).forward(request, response);
+                    return;
+                }
             }
-
 
             Supplier newSupplier = new Supplier(
                 companyName, category, businessRegNo, taxId, companyAddress,
@@ -106,19 +103,20 @@ public class AddSupplierServlet extends HttpServlet {
             boolean success = supplierDAO.addSupplier(newSupplier);
 
             if (success) {
-                LOGGER.info("Supplier added successfully, redirecting to supplier list.");
-                // Redirect to the ViewSuppliersServlet to refresh the list
-                response.sendRedirect(request.getContextPath() + "/suppliersList?feedbackMessage=Supplier added successfully!&feedbackClass=success");
+                LOGGER.info("Supplier added successfully, forwarding to supplier list.");
+                request.setAttribute("feedbackMessage", "Supplier added successfully!");
+                // No need for feedbackClass if styling is handled by specific message attributes or CSS classes
+                request.getRequestDispatcher(targetJsp).forward(request, response);
             } else {
                 LOGGER.warning("Failed to add supplier to database.");
                 request.setAttribute("errorMessage", "Database error: Could not save the supplier.");
-                request.getRequestDispatcher(addSupplierJsp).forward(request, response);
+                request.getRequestDispatcher(targetJsp).forward(request, response);
             }
 
         } catch (Exception e) { // Catch broader exceptions
              LOGGER.log(Level.SEVERE, "Error processing add supplier request", e);
              request.setAttribute("errorMessage", "An unexpected error occurred: " + e.getMessage());
-             request.getRequestDispatcher(addSupplierJsp).forward(request, response);
+             request.getRequestDispatcher(targetJsp).forward(request, response);
         }
     }
 
