@@ -1,30 +1,261 @@
-<%--
-    Document   : receipt
-    Created on : May 18, 2025 (Example Date)
-    Author     : dulan
---%>
-
-<%--
-    Document   : receipt
-    Created on : May 18, 2025 (Example Date)
-    Author     : dulan
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ page import="java.util.*, java.text.*" %>
 <%@ page import="java.sql.Connection" %>
+<%@ page import="java.sql.PreparedStatement" %>
+<%@ page import="java.sql.ResultSet" %>
 <%@ page import="java.sql.SQLException" %>
 <%@ page import="dao.ProductDAO" %>
 <%@ page import="util.DBConnection" %>
 
 <%
-    // --- STOCK UPDATE LOGIC (Same as before) ---
+    // --- DATABASE SAVE LOGIC ---
     Connection dbConn = null;
+    String dbSaveError = null;
+    boolean dbSaveSuccess = false;
+    int savedSaleId = -1;
+    
+    try {
+        dbConn = DBConnection.getConnection();
+        if (dbConn != null) {
+            // Get parameters required for database save
+            String receiptNumber = request.getParameter("receiptNumber");
+            String cashierName = request.getParameter("cashier");
+            String cashierId = request.getParameter("cashierId"); // Assuming this is passed from previous page
+            
+            // Prepare subtotal, discount, tax and total amounts for DB (strip currency symbols)
+            String subtotalParam = request.getParameter("subtotal");
+            String discountParam = request.getParameter("discount");
+            String taxParam = request.getParameter("tax");
+            String totalParam = request.getParameter("total");
+            
+            String paymentMethod = request.getParameter("paymentMethod");
+            String cashReceived = request.getParameter("cashReceived");
+            String changeDue = request.getParameter("changeDue");
+            String cardLast4 = request.getParameter("cardLast4");
+            
+            // Parse numerical values
+            double subtotalAmount = 0.0;
+            double discountAmount = 0.0;
+            double taxAmount = 0.0;
+            double totalAmount = 0.0;
+            double amountTendered = 0.0;
+            double changeGiven = 0.0;
+            int cashierIdNum = -1;
+            
+            // Strip "Rs." and commas, then parse amounts
+            if (subtotalParam != null) subtotalAmount = Double.parseDouble(subtotalParam.replace("Rs.", "").replace(",", "").trim());
+            if (totalParam != null) totalAmount = Double.parseDouble(totalParam.replace("Rs.", "").replace(",", "").trim());
+            
+            // Handle discounts with percentages: "Rs.50.00 (10%)"
+            if (discountParam != null && !discountParam.isEmpty()) {
+                String discountValue = discountParam.replace("Rs.", "").trim();
+                int parenthesisIndex = discountValue.indexOf("(");
+                if (parenthesisIndex > 0) {
+                    discountAmount = Double.parseDouble(discountValue.substring(0, parenthesisIndex).replace(",", "").trim());
+                }
+            }
+            
+            // Handle tax with percentages: "Rs.25.00 (5%)"
+            if (taxParam != null && !taxParam.isEmpty()) {
+                String taxValue = taxParam.replace("Rs.", "").trim();
+                int parenthesisIndex = taxValue.indexOf("(");
+                if (parenthesisIndex > 0) {
+                    taxAmount = Double.parseDouble(taxValue.substring(0, parenthesisIndex).replace(",", "").trim());
+                }
+            }
+            
+            // Parse cash payment details
+            if ("cash".equalsIgnoreCase(paymentMethod)) {
+                if (cashReceived != null) amountTendered = Double.parseDouble(cashReceived.replace("Rs.", "").replace(",", "").trim());
+                if (changeDue != null) changeGiven = Double.parseDouble(changeDue.replace("Rs.", "").replace(",", "").trim());
+            }
+            
+            // Parse cashier ID if available
+            if (cashierId != null && !cashierId.isEmpty()) {
+                try {
+                    cashierIdNum = Integer.parseInt(cashierId);
+                } catch (NumberFormatException e) {
+                    // Keep default -1 if parsing fails
+                }
+            }
+            
+            // Start transaction
+            dbConn.setAutoCommit(false);
+            
+            // 1. Insert the main sale record
+            String insertSaleSQL = "INSERT INTO pos_sales (receipt_number, transaction_time, cashier_id, cashier_name_snapshot, " +
+                                   "subtotal_amount, discount_text, discount_amount, tax_text, tax_amount, total_amount, " +
+                                   "payment_method, amount_tendered, change_given, card_last_four) " +
+                                   "VALUES (?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            
+            PreparedStatement pstmtSale = dbConn.prepareStatement(insertSaleSQL, PreparedStatement.RETURN_GENERATED_KEYS);
+            pstmtSale.setString(1, receiptNumber);
+            if (cashierIdNum > 0) {
+                pstmtSale.setInt(2, cashierIdNum);
+            } else {
+                pstmtSale.setNull(2, java.sql.Types.INTEGER);
+            }
+            pstmtSale.setString(3, cashierName);
+            pstmtSale.setDouble(4, subtotalAmount);
+            pstmtSale.setString(5, discountParam);
+            pstmtSale.setDouble(6, discountAmount);
+            pstmtSale.setString(7, taxParam);
+            pstmtSale.setDouble(8, taxAmount);
+            pstmtSale.setDouble(9, totalAmount);
+            pstmtSale.setString(10, paymentMethod);
+            
+            if ("cash".equalsIgnoreCase(paymentMethod)) {
+                pstmtSale.setDouble(11, amountTendered);
+                pstmtSale.setDouble(12, changeGiven);
+                pstmtSale.setNull(13, java.sql.Types.VARCHAR);
+            } else if ("card".equalsIgnoreCase(paymentMethod)) {
+                pstmtSale.setNull(11, java.sql.Types.DECIMAL);
+                pstmtSale.setNull(12, java.sql.Types.DECIMAL);
+                pstmtSale.setString(13, cardLast4);
+            } else {
+                pstmtSale.setNull(11, java.sql.Types.DECIMAL);
+                pstmtSale.setNull(12, java.sql.Types.DECIMAL);
+                pstmtSale.setNull(13, java.sql.Types.VARCHAR);
+            }
+            
+            int saleRowsAffected = pstmtSale.executeUpdate();
+            
+            // Get the auto-generated sale_id
+            ResultSet generatedKeys = pstmtSale.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                savedSaleId = generatedKeys.getInt(1);
+            }
+            
+            // 2. Insert sale items
+            if (savedSaleId > 0) {
+                ProductDAO productDAO = new ProductDAO(dbConn);
+                String[] productIdsParam = request.getParameterValues("productId");
+                String[] itemNames = request.getParameterValues("itemName");
+                String[] itemQtys = request.getParameterValues("itemQty");
+                String[] itemPrices = request.getParameterValues("itemPrice");
+                
+                if (itemNames != null && itemQtys != null && itemPrices != null && 
+                    itemNames.length == itemQtys.length && itemNames.length == itemPrices.length) {
+                    
+                    String insertItemSQL = "INSERT INTO pos_sale_items (sale_id, product_id, product_name_snapshot, " +
+                                           "quantity_sold, unit_price_at_sale, item_total_price) " +
+                                           "VALUES (?, ?, ?, ?, ?, ?)";
+                    
+                    PreparedStatement pstmtItem = dbConn.prepareStatement(insertItemSQL);
+                    
+                    for (int i = 0; i < itemNames.length; i++) {
+                        // Get product ID either from parameter or look it up by name
+                        int productId = -1;
+                        if (productIdsParam != null && i < productIdsParam.length && productIdsParam[i] != null && !productIdsParam[i].isEmpty()) {
+                            try { 
+                                productId = Integer.parseInt(productIdsParam[i]); 
+                            } catch (NumberFormatException e) { 
+                                // Keep -1 if parsing fails 
+                            }
+                        }
+                        
+                        // If product ID is not available, try to get it by name
+                        if (productId == -1) {
+                            productId = productDAO.getProductIdByName(itemNames[i]);
+                        }
+                        
+                        // Parse quantity
+                        int qty = 0;
+                        try {
+                            qty = Integer.parseInt(itemQtys[i]); // Assuming quantity won't have commas
+                        } catch (NumberFormatException e) {
+                            // Default to 0 if parsing fails
+                        }
+                        
+                        // Parse unit price
+                        double unitPrice = 0.0;
+                        String unitPriceStr = itemPrices[i].replace("Rs.", "").replace(",", "").trim(); // Remove Rs. and commas
+                        try {
+                            unitPrice = Double.parseDouble(unitPriceStr);
+                        } catch (NumberFormatException e) {
+                            // Keep default 0.0 if parsing fails
+                        }
+                        
+                        // Calculate total price
+                        double itemTotalPrice = qty * unitPrice;
+                        
+                        // Skip records with invalid product ID or quantity
+                        if (productId > 0 && qty > 0) {
+                            pstmtItem.setInt(1, savedSaleId);
+                            pstmtItem.setInt(2, productId);
+                            pstmtItem.setString(3, itemNames[i]);
+                            pstmtItem.setInt(4, qty);
+                            pstmtItem.setDouble(5, unitPrice);
+                            pstmtItem.setDouble(6, itemTotalPrice);
+                            pstmtItem.addBatch();
+                        } else {
+                            // Track items that couldn't be saved
+                            if (dbSaveError == null) {
+                                dbSaveError = "Could not save item: " + itemNames[i];
+                            } else {
+                                dbSaveError += "<br>Could not save item: " + itemNames[i];
+                            }
+                        }
+                    }
+                    
+                    // Execute batch for all items
+                    int[] itemRowsAffected = pstmtItem.executeBatch();
+                    
+                    // Check if all items were saved
+                    boolean allItemsSaved = true;
+                    for (int count : itemRowsAffected) {
+                        if (count <= 0) {
+                            allItemsSaved = false;
+                            break;
+                        }
+                    }
+                    
+                    if (allItemsSaved && itemRowsAffected.length > 0) {
+                        // All items saved successfully
+                        dbConn.commit();
+                        dbSaveSuccess = true;
+                    } else {
+                        if (dbSaveError == null) dbSaveError = "Failed to save some or all items.";
+                        dbConn.rollback();
+                    }
+                    
+                    pstmtItem.close();
+                } else {
+                    dbSaveError = "Data mismatch for sale items. Database save aborted.";
+                    dbConn.rollback();
+                }
+            } else {
+                dbSaveError = "Failed to save main sale record.";
+                dbConn.rollback();
+            }
+            
+            pstmtSale.close();
+            dbConn.setAutoCommit(true);
+        } else {
+            dbSaveError = "Database connection error. Bill details not saved.";
+        }
+    } catch (Exception e) {
+        dbSaveError = "An error occurred while saving: " + e.getMessage();
+        e.printStackTrace();
+        try {
+            if (dbConn != null) {
+                dbConn.rollback();
+                dbConn.setAutoCommit(true);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    // --- STOCK UPDATE LOGIC (Same as before) ---
     String stockUpdateError = null;
     boolean overallStockUpdateSuccess = true;
 
     try {
-        dbConn = DBConnection.getConnection();
+        if (dbConn == null) { // dbConn might have been closed if save was successful
+            dbConn = DBConnection.getConnection();
+        }
+        
         if (dbConn != null) {
             ProductDAO productDAO = new ProductDAO(dbConn);
             String[] productIdsParam = request.getParameterValues("productId");
@@ -70,7 +301,7 @@
              overallStockUpdateSuccess = false;
         }
     } catch (Exception e) { // Catching generic Exception for brevity here
-        stockUpdateError = "An error occurred: " + e.getMessage();
+        stockUpdateError = "An error occurred during stock update: " + e.getMessage();
         overallStockUpdateSuccess = false;
         e.printStackTrace();
     } finally {
@@ -78,13 +309,14 @@
     }
 
     // --- Retrieve Data for Display (Same as before) ---
+    // These parameters are retrieved again for display. Values might still have commas if coming directly from form.
     request.setCharacterEncoding("UTF-8");
     String receiptNumber = request.getParameter("receiptNumber");
     String receiptDate = request.getParameter("receiptDate");
     String cashier = request.getParameter("cashier");
-    String[] itemNames = request.getParameterValues("itemName");
-    String[] itemQtys = request.getParameterValues("itemQty");
-    String[] itemPrices = request.getParameterValues("itemPrice");
+    String[] itemNames = request.getParameterValues("itemName"); // Used for display
+    String[] itemQtys = request.getParameterValues("itemQty");   // Used for display
+    String[] itemPrices = request.getParameterValues("itemPrice"); // Used for display
     String subtotal = request.getParameter("subtotal");
     String discount = request.getParameter("discount");
     String tax = request.getParameter("tax");
@@ -124,9 +356,10 @@
         .receipt-footer { border-bottom: none; padding-bottom: 0;}
         .receipt-row, .receipt-item, .payment-method-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.95em; }
         .receipt-item-header { font-weight: bold; border-bottom: 1px solid #ccc; margin-bottom: 8px; padding-bottom: 5px; }
-        .receipt-item .item-name, .receipt-item-header .item-name { flex: 3; text-align: left; }
-        .receipt-item .item-qty, .receipt-item-header .item-qty { flex: 1; text-align: center; }
-        .receipt-item .item-price, .receipt-item-header .item-price { flex: 1.5; text-align: right; }
+        .receipt-item .item-name, .receipt-item-header .item-name { flex: 2.5; text-align: left; }
+        .receipt-item .item-qty, .receipt-item-header .item-qty { flex: 0.75; text-align: center; }
+        .receipt-item .item-unit-price, .receipt-item-header .item-unit-price { flex: 1.25; text-align: right; }
+        .receipt-item .item-total-price, .receipt-item-header .item-total-price { flex: 1.5; text-align: right; }
         .receipt-summary .total { font-weight: bold; font-size: 1.1em; margin-top: 10px; padding-top: 10px; border-top: 1px solid #555;}
         .receipt-summary span:last-child, .payment-details-section span:last-child { text-align: right; }
         .receipt-footer p { text-align: center; font-size: 0.85em; margin: 5px 0;}
@@ -139,6 +372,9 @@
         .status-message { text-align: center; margin-top: 10px; font-weight: bold; }
         .success { color: green; }
         .error { color: red; }
+        .db-status { padding: 10px; margin-bottom: 15px; border-radius: 4px; font-weight: bold; text-align: center; }
+        .db-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .db-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .error-message-box { background-color: #ffebee; color: #c62828; border: 1px solid #ef9a9a; padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: left; }
         @media print {
             body { margin: 0; background-color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact;}
@@ -146,18 +382,25 @@
             .receipt-header h2 {font-size: 12pt;}
             .receipt-header p, .receipt-row, .receipt-item, .payment-method-row {font-size: 9pt;}
             .receipt-summary .total {font-size: 10pt;}
-            .action-buttons, .status-message { display: none; }
-            .error-message-box { border: 1px solid #000 !important; color: #000 !important; background-color: #fff !important;}
+            .action-buttons, .status-message, .db-status { display: none; }
+            .error-message-box, .db-error, .db-success { border: 1px solid #000 !important; color: #000 !important; background-color: #fff !important;}
             .barcode img {max-height: 30px;}
         }
     </style>
 </head>
 <body>
 
+<% if (dbSaveError != null) { %>
+    <div class="db-status db-error">
+        <i class="fas fa-exclamation-circle"></i> Database Error: <%= dbSaveError %>
+    </div>
+<% /* Success message block was removed previously */ %>
+<% } %>
+
 <div class="receipt-container" id="receiptContent">
     <div class="receipt-header">
         <div class="store-logo" id="store-logo">
-            <img src="${pageContext.request.contextPath}/Images/logo.png" alt="Store Logo" class="logo-img">
+            <img src="${pageContext.request.contextPath}/Images/logo.png" alt="Store Logo" class="logo-img" style="filter: brightness(0); -webkit-filter: brightness(0);">
         </div>
         <h2>Swift POS Store</h2>
         <p>123/2, High level Road, Homagama.</p>
@@ -166,7 +409,7 @@
 
     <% if (stockUpdateError != null) { %>
         <div class="error-message-box">
-            <strong>Attention:</strong><br>
+            <strong>Attention: Stock Update Issue</strong><br>
             <%= stockUpdateError %>
         </div>
     <% } %>
@@ -179,22 +422,45 @@
 
     <div class="receipt-items">
         <div class="receipt-item-header">
-            <span class="item-name">Item</span><span class="item-qty">Qty</span><span class="item-price">Price</span>
+            <span class="item-name">Item</span>
+            <span class="item-qty">Qty</span>
+            <span class="item-unit-price">Unit Price</span>
+            <span class="item-total-price">Total</span>
         </div>
         <%
             if (itemNames != null && itemQtys != null && itemPrices != null && itemNames.length == itemQtys.length && itemNames.length == itemPrices.length) {
                 for (int i = 0; i < itemNames.length; i++) {
+                    // Parse values for calculations for display
+                    int qty = 1;
+                    try {
+                        qty = Integer.parseInt(itemQtys[i]);
+                    } catch (NumberFormatException e) {
+                        // Default to 1 if parsing fails
+                    }
+                    
+                    // Extract just the numeric price value without the "Rs." prefix or commas
+                    String unitPriceStrDisplay = itemPrices[i].replace("Rs.", "").replace(",", "").trim();
+                    double unitPriceDisplay = 0.0;
+                    try {
+                        unitPriceDisplay = Double.parseDouble(unitPriceStrDisplay);
+                    } catch (NumberFormatException e) {
+                        // Keep default 0.0 if parsing fails
+                    }
+                    
+                    // Calculate total price for display
+                    double totalPriceDisplay = qty * unitPriceDisplay;
         %>
-            <div class="receipt-item" data-name="<%= itemNames[i] %>" data-qty="<%= itemQtys[i] %>" data-price="<%= itemPrices[i] %>">
+            <div class="receipt-item" data-name="<%= itemNames[i] %>" data-qty="<%= itemQtys[i] %>" data-price="<%= itemPrices[i] %>" data-total-price="<%= String.format("%.2f", totalPriceDisplay) %>">
                 <span class="item-name"><%= itemNames[i] %></span>
                 <span class="item-qty"><%= itemQtys[i] %></span>
-                <span class="item-price"><%= itemPrices[i] %></span>
+                <span class="item-unit-price">Rs.<%= String.format("%.2f", unitPriceDisplay) %></span>
+                <span class="item-total-price">Rs.<%= String.format("%.2f", totalPriceDisplay) %></span>
             </div>
         <%
                 }
             } else {
         %>
-            <div class="receipt-item"><span colspan="3" style="text-align:center;">No items found.</span></div>
+            <div class="receipt-item"><span colspan="4" style="text-align:center;">No items found.</span></div>
         <%
             }
         %>
@@ -264,7 +530,7 @@
             receiptNumber: "<%= receiptNumber %>",
             receiptDate: "<%= receiptDate %>",
             cashier: "<%= cashier %>",
-            subtotal: "<%= subtotal %>",
+            subtotal: "<%= subtotal %>", // These are original strings from parameters
             discount: "<%= discount %>",
             tax: "<%= tax %>",
             total: "<%= total %>",
@@ -279,9 +545,15 @@
         itemElements.forEach(itemEl => {
             const name = itemEl.dataset.name; // Using data attributes set in JSP loop
             const qty = itemEl.dataset.qty;
-            const price = itemEl.dataset.price;
-            if (name && qty && price) { // Ensure all parts are present
-                 receiptData.items.push({ name: name, qty: qty, price: price });
+            const unitPrice = itemEl.dataset.price; // This is the original string like "Rs.1,234.00"
+            const totalPrice = itemEl.dataset.totalPrice; // This is calculated in display loop Rs.XXXX.XX
+            if (name && qty && unitPrice) { // Ensure all parts are present
+                 receiptData.items.push({ 
+                    name: name, 
+                    qty: qty, 
+                    unitPrice: unitPrice, // Send original string
+                    totalPrice: "Rs." + totalPrice // Re-add Rs. if dataset.totalPrice is just number
+                });
             }
         });
         
@@ -312,6 +584,22 @@
             emailButton.disabled = false;
         });
     }
+
+    // Check for database save status on page load
+    window.onload = function() {
+        <% if (dbSaveSuccess) { %>
+            console.log("Receipt data saved to database with Sale ID: <%= savedSaleId %>");
+        <% } else if (dbSaveError != null) { %>
+            // Sanitize dbSaveError for JavaScript string literal
+            var dbErrorMsg = "<%= dbSaveError != null ? dbSaveError.replace("\"", "\\\"").replace("\n", " ").replace("\r", " ") : "" %>";
+            console.error("Database save error: " + dbErrorMsg);
+        <% } %>
+
+        <% if (overallStockUpdateSuccess == false && stockUpdateError != null) { %>
+            var stockErrorMsg = "<%= stockUpdateError != null ? stockUpdateError.replace("\"", "\\\"").replace("<br/>", "\\n").replace("<br>", "\\n").replace("\n", " ").replace("\r", " ") : "" %>";
+            console.warn("Stock Update Issue: " + stockErrorMsg);
+        <% } %>
+    };
 </script>
 
 </body>

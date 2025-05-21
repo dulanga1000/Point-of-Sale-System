@@ -2,6 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
+ */
 package controller; // Or your actual controller package
 
 import jakarta.servlet.ServletException;
@@ -172,28 +176,35 @@ public class EmailReceiptServlet extends HttpServlet {
     }
 
     private String buildHtmlEmailBody(JSONObject data) {
-        // This method remains the same as provided previously
         StringBuilder body = new StringBuilder();
         body.append("<html><body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>");
         body.append("<div style='max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;'>");
+        
+        // Header section
         body.append("<div style='text-align: center; border-bottom: 1px dashed #ccc; margin-bottom: 20px; padding-bottom: 15px;'>");
         body.append("<h2 style='margin: 5px 0; color: #2c3e50;'>Swift POS Store</h2>");
         body.append("<p style='margin: 2px 0; font-size: 0.9em;'>123/2, High level Road, Homagama.</p>");
         body.append("<p style='margin: 2px 0; font-size: 0.9em;'>Tel: (+94) 76-2375055</p>");
         body.append("</div>");
+        
+        // Receipt details
         body.append("<h3 style='color: #3498db; border-bottom: 1px solid #eee; padding-bottom: 5px;'>Transaction Receipt</h3>");
         body.append("<div style='margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #eee;'>");
         body.append("<p><strong>Receipt #:</strong> ").append(data.optString("receiptNumber", "N/A")).append("</p>");
         body.append("<p><strong>Date:</strong> ").append(data.optString("receiptDate", "N/A")).append("</p>");
         body.append("<p><strong>Cashier:</strong> ").append(data.optString("cashier", "System")).append("</p>");
         body.append("</div>");
+        
+        // Items purchased
         body.append("<div style='margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #eee;'>");
         body.append("<h4>Items Purchased:</h4>");
         body.append("<table style='width: 100%; border-collapse: collapse; font-size: 0.95em;'><thead><tr style='background-color: #f0f0f0;'>");
         body.append("<th style='text-align: left; padding: 8px; border-bottom: 1px solid #ddd;'>Item</th>");
         body.append("<th style='text-align: center; padding: 8px; border-bottom: 1px solid #ddd;'>Qty</th>");
-        body.append("<th style='text-align: right; padding: 8px; border-bottom: 1px solid #ddd;'>Price</th>");
+        body.append("<th style='text-align: right; padding: 8px; border-bottom: 1px solid #ddd;'>Unit Price</th>");
+        body.append("<th style='text-align: right; padding: 8px; border-bottom: 1px solid #ddd;'>Total</th>");
         body.append("</tr></thead><tbody>");
+        
         JSONArray itemsArray = data.optJSONArray("items");
         if (itemsArray != null && itemsArray.length() > 0) {
             for (int i = 0; i < itemsArray.length(); i++) {
@@ -202,34 +213,53 @@ public class EmailReceiptServlet extends HttpServlet {
                     body.append("<tr>");
                     body.append("<td style='padding: 6px; border-bottom: 1px solid #eee;'>").append(item.optString("name", "")).append("</td>");
                     body.append("<td style='text-align: center; padding: 6px; border-bottom: 1px solid #eee;'>").append(item.optString("qty", "")).append("</td>");
-                    body.append("<td style='text-align: right; padding: 6px; border-bottom: 1px solid #eee;'>").append(item.optString("price", "")).append("</td>");
+                    body.append("<td style='text-align: right; padding: 6px; border-bottom: 1px solid #eee;'>").append(item.optString("unitPrice", "")).append("</td>");
+                    body.append("<td style='text-align: right; padding: 6px; border-bottom: 1px solid #eee;'>Rs.").append(item.optString("totalPrice", "")).append("</td>");
                     body.append("</tr>");
                 }
             }
         } else {
-            body.append("<tr><td colspan='3' style='text-align: center; padding: 10px;'>No items listed in this transaction.</td></tr>");
+            body.append("<tr><td colspan='4' style='text-align: center; padding: 10px;'>No items listed in this transaction.</td></tr>");
         }
         body.append("</tbody></table></div>");
+        
+        // Receipt summary
         body.append("<div style='margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #eee; font-size: 0.95em;'>");
         body.append("<p style='display: flex; justify-content: space-between;'><span>Subtotal:</span> <span>").append(data.optString("subtotal", "Rs.0.00")).append("</span></p>");
         body.append("<p style='display: flex; justify-content: space-between;'><span>Discount:</span> <span>").append(data.optString("discount", "Rs.0.00 (0%)")).append("</span></p>");
         body.append("<p style='display: flex; justify-content: space-between;'><span>Tax:</span> <span>").append(data.optString("tax", "Rs.0.00 (0%)")).append("</span></p>");
         body.append("<p style='display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1em; margin-top: 10px; padding-top: 10px; border-top: 1px solid #999;'><span>Total:</span> <span>").append(data.optString("total", "Rs.0.00")).append("</span></p>");
         body.append("</div>");
-        body.append("<div style='margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #eee; font-sze: 0.95em;'>");
+        
+        // Payment method details
+        body.append("<div style='margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #eee; font-size: 0.95em;'>");
         String paymentMethod = data.optString("paymentMethod", "N/A");
-        body.append("<p><strong>Payment Method:</strong> ").append(paymentMethod.substring(0, 1).toUpperCase() + paymentMethod.substring(1)).append("</p>");
-        if ("cash".equalsIgnoreCase(paymentMethod)) {
-            body.append("<p><strong>Cash Received:</strong> ").append(data.optString("cashReceived", "N/A")).append("</p>");
-            body.append("<p><strong>Change Due:</strong> ").append(data.optString("changeDue", "N/A")).append("</p>");
-        } else if ("card".equalsIgnoreCase(paymentMethod)) {
-            body.append("<p><strong>Card Used:</strong> **** **** **** ").append(data.optString("cardLast4", "N/A")).append("</p>");
+        if (paymentMethod != null && !paymentMethod.isEmpty()) {
+            // Capitalize first letter of payment method
+            String displayPaymentMethod = paymentMethod.substring(0, 1).toUpperCase();
+            if (paymentMethod.length() > 1) {
+                displayPaymentMethod += paymentMethod.substring(1);
+            }
+            body.append("<p><strong>Payment Method:</strong> ").append(displayPaymentMethod).append("</p>");
+            
+            if ("cash".equalsIgnoreCase(paymentMethod)) {
+                body.append("<p><strong>Cash Received:</strong> ").append(data.optString("cashReceived", "N/A")).append("</p>");
+                body.append("<p><strong>Change Due:</strong> ").append(data.optString("changeDue", "N/A")).append("</p>");
+            } else if ("card".equalsIgnoreCase(paymentMethod)) {
+                body.append("<p><strong>Card Used:</strong> **** **** **** ").append(data.optString("cardLast4", "N/A")).append("</p>");
+            }
+        } else {
+            body.append("<p><strong>Payment Method:</strong> N/A</p>");
         }
         body.append("</div>");
+        
+        // Footer
         body.append("<div style='text-align: center; font-size: 0.9em; color: #555; margin-top: 20px;'>");
         body.append("<p>Thank you for shopping with us!</p>");
         body.append("<p>Return policy: Items can be returned within 30 days with receipt.</p>");
+        body.append("<p style='font-size: 0.8em; color: #777; margin-top: 15px;'>This receipt was sent to: ").append(data.optString("recipientEmail", "")).append("</p>");
         body.append("</div>");
+        
         body.append("</div>"); 
         body.append("</body></html>");
         return body.toString();

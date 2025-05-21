@@ -1,118 +1,142 @@
-<!DOCTYPE html>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.util.*" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="model.User" %> <%-- Adjust to your User class package --%>
 
 <%
+    // Database configuration
+    String dbDriver = "com.mysql.cj.jdbc.Driver";
+    String dbURL = "jdbc:mysql://localhost:3306/swift_database";
+    String dbUsername = "root";
+    String dbPassword = "";
+
     // Attempt to retrieve the logged-in user's details from the session
-    // Ensure your LoginServlet stores the User object with the name "loggedInUserProfile"
-    // Note: Your LoginServlet.java (from uploaded files) uses "loggedInUser". Adjust if needed.
     User currentUser = (User) session.getAttribute("loggedInUserProfile");
 
     // Default values in case user is not found or details are missing
     String displayName = "John Doe";
-    String displayRole = "User"; // Or "Cashier" if this section is specific to cashiers
+    String displayRole = "Cashier";
     String userProfileImagePath = request.getContextPath() + "/Images/default_avatar.png"; // Default user avatar
 
-    if (currentUser != null) {
-        // Construct the full name
+    // If user not in session, attempt to get cashier info from database
+    if (currentUser == null) {
+        Connection userConn = null;
+        try {
+            Class.forName(dbDriver);
+            userConn = DriverManager.getConnection(dbURL, dbUsername, dbPassword);
+            PreparedStatement sql = userConn.prepareStatement("SELECT * FROM users WHERE role = 'Cashier' LIMIT 1");
+            ResultSet result = sql.executeQuery();
+
+            if (result.next()) { 
+                displayName = result.getString("first_name") + " " + result.getString("last_name");
+                displayRole = result.getString("role");
+                String dbProfilePath = result.getString("profile_image_path");
+                if (dbProfilePath != null && !dbProfilePath.trim().isEmpty()) {
+                    userProfileImagePath = request.getContextPath() + "/" + dbProfilePath.replace("\\", "/");
+                }
+            }
+            result.close();
+            sql.close();
+        } catch (Exception ex) {
+            // Log error but continue
+            System.err.println("User data error: " + ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            if (userConn != null) {
+                try {
+                    userConn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    } else {
+        // Use the session user data
         String firstName = currentUser.getFirstName() != null ? currentUser.getFirstName() : "";
         String lastName = currentUser.getLastName() != null ? currentUser.getLastName() : "";
         if (!firstName.isEmpty() || !lastName.isEmpty()) {
             displayName = (firstName + " " + lastName).trim();
         }
 
-        // Get the role
         if (currentUser.getRole() != null && !currentUser.getRole().isEmpty()) {
             displayRole = currentUser.getRole();
         }
 
-        // Construct the web-accessible image path from the database path
         if (currentUser.getProfileImagePath() != null && !currentUser.getProfileImagePath().isEmpty()) {
             String dbProfilePath = currentUser.getProfileImagePath();
-            // Convert backslashes to forward slashes and prepend context path
             userProfileImagePath = request.getContextPath() + "/" + dbProfilePath.replace("\\", "/");
         }
     }
-%>
 
-<%
-// Database configuration - using your swift_database
-String dbDriver = "com.mysql.cj.jdbc.Driver"; //
-String dbURL = "jdbc:mysql://localhost:3306/swift_database"; //
-String dbUsername = "root"; //
-String dbPassword = ""; //
+    // Initialize products list
+    List<Map<String, String>> products = new ArrayList<>();
 
-List<Map<String, String>> products = new ArrayList<>();
-
-try {
-    // Load JDBC driver
-    Class.forName(dbDriver);
-    
-    // Create database connection
-    try (Connection conn = DriverManager.getConnection(dbURL, dbUsername, dbPassword)) {
-        // SQL query to fetch products - matching your table structure
-        String query = "SELECT id, name, category, price, sku, stock, image_path, status FROM products WHERE status = 'Active'"; //
-        
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
+    try {
+        // Load JDBC driver
+        Class.forName(dbDriver);
+        // Create database connection
+        try (Connection conn = DriverManager.getConnection(dbURL, dbUsername, dbPassword)) {
+            // SQL query to fetch products
+            String query = "SELECT id, name, category, price, sku, stock, image_path, status FROM products WHERE status = 'Active'";
             
-            // Process results
-            while (rs.next()) {
-                Map<String, String> product = new HashMap<>();
-                product.put("id", rs.getString("id"));
-                product.put("name", rs.getString("name"));
-                product.put("category", rs.getString("category"));
-                product.put("price", String.format("Rs.%.2f", rs.getDouble("price")));
-                product.put("stock", rs.getString("stock"));
-                product.put("sku", rs.getString("sku"));
-                product.put("image_path", rs.getString("image_path")); //
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(query)) {
                 
-                // Determine stock status based on quantity
-                int stock = rs.getInt("stock");
-                String stockStatus;
-                if (stock <= 0) {
-                    stockStatus = "out-stock";
-                } else if (stock < 10) {
-                    stockStatus = "low-stock";
-                } else {
-                    stockStatus = "in-stock";
+                // Process results
+                while (rs.next()) {
+                    Map<String, String> product = new HashMap<>();
+                    product.put("id", rs.getString("id"));
+                    product.put("name", rs.getString("name"));
+                    product.put("category", rs.getString("category"));
+                    product.put("price", String.format("Rs.%.2f", rs.getDouble("price")));
+                    product.put("stock", rs.getString("stock"));
+                    product.put("sku", rs.getString("sku"));
+                    product.put("image_path", rs.getString("image_path"));
+                    
+                    // Determine stock status based on quantity
+                    int stock = rs.getInt("stock");
+                    String stockStatus;
+                    if (stock <= 0) {
+                        stockStatus = "out-stock";
+                    } else if (stock < 10) {
+                        stockStatus = "low-stock";
+                    } else {
+                        stockStatus = "in-stock";
+                    }
+                    product.put("stock_status", stockStatus);
+                    
+                    // Determine icon class based on category
+                    String iconClass = "fas fa-box"; // default
+                    String category = rs.getString("category").toLowerCase();
+                    if (category.contains("food")) {
+                        iconClass = "fas fa-utensils";
+                    } else if (category.contains("beverage")) {
+                        iconClass = "fas fa-coffee";
+                    } else if (category.contains("electronic")) {
+                        iconClass = "fas fa-mobile-alt";
+                    } else if (category.contains("cloth")) {
+                        iconClass = "fas fa-tshirt";
+                    } else if (category.contains("stationery")) {
+                        iconClass = "fas fa-pen";
+                    } else if (category.contains("home")) {
+                        iconClass = "fas fa-home";
+                    }
+                    product.put("icon_class", iconClass);
+                    
+                    products.add(product);
                 }
-                product.put("stock_status", stockStatus);
-                
-                // Determine icon class based on category
-                String iconClass = "fas fa-box"; // default
-                String category = rs.getString("category").toLowerCase();
-                if (category.contains("food")) {
-                    iconClass = "fas fa-utensils";
-                } else if (category.contains("beverage")) {
-                    iconClass = "fas fa-coffee";
-                } else if (category.contains("electronic")) {
-                    iconClass = "fas fa-mobile-alt";
-                } else if (category.contains("cloth")) {
-                    iconClass = "fas fa-tshirt";
-                } else if (category.contains("stationery")) {
-                    iconClass = "fas fa-pen";
-                } else if (category.contains("home")) {
-                    iconClass = "fas fa-home";
-                }
-                product.put("icon_class", iconClass);
-                
-                products.add(product);
             }
         }
+    } catch (ClassNotFoundException e) {
+        out.println("<div class='error'>JDBC Driver not found: " + e.getMessage() + "</div>");
+        e.printStackTrace();
+    } catch (SQLException e) {
+        out.println("<div class='error'>Database error: " + e.getMessage() + "</div>");
+        e.printStackTrace();
+    } catch (Exception e) {
+        out.println("<div class='error'>Unexpected error: " + e.getMessage() + "</div>");
+        e.printStackTrace();
     }
-} catch (ClassNotFoundException e) {
-    out.println("<div class='error'>JDBC Driver not found: " + e.getMessage() + "</div>");
-    e.printStackTrace();
-} catch (SQLException e) {
-    out.println("<div class='error'>Database error: " + e.getMessage() + "</div>");
-    e.printStackTrace();
-} catch (Exception e) {
-    out.println("<div class='error'>Unexpected error: " + e.getMessage() + "</div>");
-    e.printStackTrace();
-}
 %>
 
 <!DOCTYPE html>
@@ -122,7 +146,6 @@ try {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Products - Cashier Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <%-- <script src="product_cashi.js"> </script> --%> <%-- Ensure this JS file exists and is correctly linked if used --%>
   <style>
     :root {
       --primary: #3498db;
@@ -602,15 +625,15 @@ try {
         <img src="<%= request.getContextPath() %>/Images/logo.png" alt="POS Logo" class="logo-img">
         <h2>Swift</h2>
       </div>
-        <jsp:include page="menu.jsp" />
-      </div>
+      <jsp:include page="menu.jsp" />
+    </div>
 
     <div class="main-content">
       <div class="header">
         <h1 class="page-title">Products</h1>
         <div class="user-profile">
           <div class="user-image">
-            <img src="<%= userProfileImagePath %>" alt="<%= displayName %> avatar" style="width:40px; height:40px; border-radius:50%; object-fit: cover;">
+            <img src="<%= userProfileImagePath %>" alt="User Profile">
           </div>
           <div class="user-info">
             <h4><%= displayName %></h4>

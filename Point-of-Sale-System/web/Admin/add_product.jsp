@@ -1,9 +1,3 @@
-<%-- 
-    Document   : add_product
-    Created on : May 16, 2025, 9:25:47 AM
-    Author     : dulan
---%>
-
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
 <%@ page import="jakarta.servlet.http.*, jakarta.servlet.*" %>
@@ -123,13 +117,11 @@
                         <select id="product_category" name="product_category" required>
                             <option value="">Select Category</option>
                             <option value="Food">Food</option>
-                            <option value="Beverages">Beverages</option>
-                            <option value="Electronics">Electronics</option>
-                            <option value="Clothing">Clothing</option>
-                            <option value="Home Goods">Home Goods</option>
-                            <option value="Books">Books</option>
-                            <option value="Stationery">Stationery</option>
-                            <option value="Accessories">Accessories</option>
+                            <option value="Beverages">ingredients</option>
+                            <option value="Electronics">dairy</option>
+                            <option value="Clothing">packaging</option>
+                            <option value="Home Goods">equipment</option>
+                            <option value="Home Goods">beverages</option>
                         </select>
                     </div>
 

@@ -4,15 +4,15 @@
  */
 package dao;
 
-import model.Supplier; // Assuming you have this model
+import model.Supplier;
 import util.DBConnection;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types; 
-import java.math.BigDecimal; 
+import java.sql.Types;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -21,17 +21,53 @@ import java.util.logging.Logger;
 public class SupplierDAO {
 
     private static final Logger LOGGER = Logger.getLogger(SupplierDAO.class.getName());
-    // ... (your existing INSERT_SUPPLIER_SQL and SELECT_ALL_SUPPLIERS_SQL)
-     private static final String INSERT_SUPPLIER_SQL = "INSERT INTO suppliers " +
+    
+    private static final String INSERT_SUPPLIER_SQL = "INSERT INTO suppliers " +
         "(company_name, category, business_reg_no, tax_id, company_address, " +
         "contact_person, contact_position, contact_phone, contact_email, " +
         "payment_method, payment_terms, credit_limit, delivery_terms, lead_time, " +
-        "product_categories, additional_notes, supplier_status) " + // Added supplier_status
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')"; // Default to Active
+        "product_categories, additional_notes, supplier_status) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')";
 
     private static final String SELECT_ALL_SUPPLIERS_SQL = "SELECT * FROM suppliers ORDER BY company_name ASC";
+    private static final String SELECT_SUPPLIER_BY_ID_SQL = "SELECT * FROM suppliers WHERE supplier_id = ?";
     private static final String SELECT_SUPPLIER_EMAIL_BY_ID_SQL = "SELECT contact_email FROM suppliers WHERE supplier_id = ?";
 
+
+    // Helper method to map ResultSet to Supplier object
+    private Supplier mapRowToSupplier(ResultSet resultSet) throws SQLException {
+        Supplier supplier = new Supplier();
+        supplier.setSupplierId(resultSet.getInt("supplier_id"));
+        supplier.setCompanyName(resultSet.getString("company_name"));
+        supplier.setCategory(resultSet.getString("category"));
+        supplier.setBusinessRegNo(resultSet.getString("business_reg_no"));
+        supplier.setTaxId(resultSet.getString("tax_id"));
+        supplier.setCompanyAddress(resultSet.getString("company_address"));
+        // supplier.setSupplierStatus(resultSet.getString("supplier_status")); // Uncomment if you add this field to your Supplier model
+        supplier.setContactPerson(resultSet.getString("contact_person"));
+        supplier.setContactPosition(resultSet.getString("contact_position"));
+        supplier.setContactPhone(resultSet.getString("contact_phone"));
+        supplier.setContactEmail(resultSet.getString("contact_email"));
+        supplier.setPaymentMethod(resultSet.getString("payment_method"));
+        supplier.setPaymentTerms(resultSet.getString("payment_terms"));
+        
+        BigDecimal creditLimit = resultSet.getBigDecimal("credit_limit");
+        if (resultSet.wasNull()) {
+            supplier.setCreditLimit(null);
+        } else {
+            supplier.setCreditLimit(creditLimit);
+        }
+        
+        supplier.setDeliveryTerms(resultSet.getString("delivery_terms"));
+        supplier.setLeadTime(resultSet.getInt("lead_time")); // Assuming lead_time is NOT NULL or handle appropriately
+        supplier.setProductCategories(resultSet.getString("product_categories"));
+        supplier.setAdditionalNotes(resultSet.getString("additional_notes"));
+        
+        // Assuming your Supplier model has createdAt and if the column exists in DB
+        // If your Supplier model doesn't have createdAt, you can comment this out.
+        // supplier.setCreatedAt(resultSet.getTimestamp("created_at")); 
+        return supplier;
+    }
 
     public boolean addSupplier(Supplier supplier) {
         Connection connection = null;
@@ -119,7 +155,7 @@ public class SupplierDAO {
             connection = DBConnection.getConnection();
             if (connection == null) {
                 LOGGER.severe("Failed to obtain database connection in getAllSuppliers.");
-                return suppliers;
+                return suppliers; // Return empty list
             }
             preparedStatement = connection.prepareStatement(SELECT_ALL_SUPPLIERS_SQL);
             resultSet = preparedStatement.executeQuery();
@@ -127,26 +163,7 @@ public class SupplierDAO {
 
             int count = 0;
             while (resultSet.next()) {
-                Supplier supplier = new Supplier();
-                supplier.setSupplierId(resultSet.getInt("supplier_id"));
-                supplier.setCompanyName(resultSet.getString("company_name"));
-                supplier.setCategory(resultSet.getString("category"));
-                supplier.setBusinessRegNo(resultSet.getString("business_reg_no"));
-                supplier.setTaxId(resultSet.getString("tax_id"));
-                supplier.setCompanyAddress(resultSet.getString("company_address"));
-                supplier.setContactPerson(resultSet.getString("contact_person"));
-                supplier.setContactPosition(resultSet.getString("contact_position"));
-                supplier.setContactPhone(resultSet.getString("contact_phone"));
-                supplier.setContactEmail(resultSet.getString("contact_email")); // Make sure this column exists
-                supplier.setPaymentMethod(resultSet.getString("payment_method"));
-                supplier.setPaymentTerms(resultSet.getString("payment_terms"));
-                supplier.setCreditLimit(resultSet.getBigDecimal("credit_limit"));
-                supplier.setDeliveryTerms(resultSet.getString("delivery_terms"));
-                supplier.setLeadTime(resultSet.getInt("lead_time"));
-                supplier.setProductCategories(resultSet.getString("product_categories"));
-                supplier.setAdditionalNotes(resultSet.getString("additional_notes"));
-                supplier.setCreatedAt(resultSet.getTimestamp("created_at"));
-                // supplier.setSupplierStatus(resultSet.getString("supplier_status")); // Assuming you add this to your model
+                Supplier supplier = mapRowToSupplier(resultSet); // Use helper method
                 suppliers.add(supplier);
                 count++;
             }
@@ -160,12 +177,40 @@ public class SupplierDAO {
         }
         return suppliers;
     }
+    
+    public Supplier getSupplierById(int supplierId) {
+        Supplier supplier = null;
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        LOGGER.info("Attempting to retrieve supplier by ID: " + supplierId);
 
-    /**
-     * Retrieves the contact email of a supplier by their ID.
-     * @param supplierId The ID of the supplier.
-     * @return The supplier's contact email, or null if not found or an error occurs.
-     */
+        try {
+            connection = DBConnection.getConnection();
+            if (connection == null) {
+                LOGGER.severe("Failed to obtain database connection in getSupplierById.");
+                return null;
+            }
+            preparedStatement = connection.prepareStatement(SELECT_SUPPLIER_BY_ID_SQL);
+            preparedStatement.setInt(1, supplierId);
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                supplier = mapRowToSupplier(resultSet); 
+                LOGGER.info("Supplier found: " + (supplier != null ? supplier.getCompanyName() : "null object mapped"));
+            } else {
+                LOGGER.warning("No supplier found with ID: " + supplierId);
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "SQL Error retrieving supplier by ID: " + supplierId, e);
+        } finally {
+            if (resultSet != null) { try { resultSet.close(); } catch (SQLException e) { LOGGER.log(Level.WARNING, "Error closing ResultSet.", e); }}
+            if (preparedStatement != null) { try { preparedStatement.close(); } catch (SQLException e) { LOGGER.log(Level.WARNING, "Error closing PreparedStatement.", e); }}
+            DBConnection.closeConnection(connection);
+        }
+        return supplier;
+    }
+
     public String getSupplierEmailById(int supplierId) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
@@ -184,7 +229,7 @@ public class SupplierDAO {
             resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                email = resultSet.getString("contact_email"); // Ensure this column name matches your DB
+                email = resultSet.getString("contact_email"); 
             }
             if (email != null) {
                 LOGGER.info("Email found for supplier ID " + supplierId + ": " + email);

@@ -13,10 +13,13 @@ import jakarta.mail.Session;
 import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class EmailUtil {
+    private static final Logger LOGGER = Logger.getLogger(EmailUtil.class.getName());
 
-    // SMTP Configuration for Gmail (Copied from EmailReceiptServlet)
+    // SMTP Configuration for Gmail
     // Ensure these are correct and SMTP_PASSWORD is your 16-character App Password
     private static final String SMTP_HOST = "smtp.gmail.com";
     private static final String SMTP_PORT = "587"; // For TLS
@@ -33,12 +36,20 @@ public class EmailUtil {
      * @return true if the email was sent successfully, false otherwise.
      */
     public static boolean sendHtmlEmail(String recipientEmail, String subject, String htmlContent) {
-        System.out.println("EmailUtil: Attempting to send email to: " + recipientEmail + " with subject: " + subject);
+        LOGGER.log(Level.INFO, "Attempting to send email to: {0} with subject: {1}", new Object[]{recipientEmail, subject});
 
-        if (SMTP_PASSWORD == null || "PASTE_YOUR_16_CHARACTER_APP_PASSWORD_HERE".equals(SMTP_PASSWORD) || SMTP_PASSWORD.trim().isEmpty()) {
-            System.err.println("CRITICAL EmailUtil ERROR: SMTP_PASSWORD is not configured or is a placeholder.");
+        // Corrected placeholder check
+        final String PLACEHOLDER_PASSWORD = "PASTE_YOUR_16_CHARACTER_APP_PASSWORD_HERE"; // Standard placeholder
+
+        if (SMTP_PASSWORD == null || PLACEHOLDER_PASSWORD.equals(SMTP_PASSWORD) || SMTP_PASSWORD.trim().isEmpty()) {
+             LOGGER.severe("CRITICAL EmailUtil ERROR: SMTP_PASSWORD is not configured or is a placeholder. Please update it in EmailUtil.java.");
+             return false;
+        }
+        if (recipientEmail == null || recipientEmail.trim().isEmpty() || !recipientEmail.contains("@")) {
+            LOGGER.log(Level.WARNING, "Invalid recipient email address: {0}", recipientEmail);
             return false;
         }
+
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -53,7 +64,7 @@ public class EmailUtil {
                 return new PasswordAuthentication(SMTP_USER, SMTP_PASSWORD);
             }
         });
-        // session.setDebug(true); // Uncomment for verbose JavaMail logs
+        // session.setDebug(true); // Uncomment for verbose JavaMail logs in server console, useful for troubleshooting
 
         try {
             MimeMessage mimeMessage = new MimeMessage(session);
@@ -63,15 +74,18 @@ public class EmailUtil {
             mimeMessage.setContent(htmlContent, "text/html; charset=utf-8");
 
             Transport.send(mimeMessage);
-            System.out.println("EmailUtil: Email sent successfully to " + recipientEmail);
+            LOGGER.log(Level.INFO, "Email sent successfully to {0}", recipientEmail);
             return true;
         } catch (MessagingException e) {
-            System.err.println("EmailUtil: MessagingException while sending email to " + recipientEmail + ". Subject: " + subject);
-            e.printStackTrace(); // Print full stack trace for debugging
+            LOGGER.log(Level.SEVERE, "MessagingException while sending email to " + recipientEmail + ". Subject: " + subject, e);
+            // Log detailed error from MessagingException
+            Exception nextEx = e.getNextException();
+            if (nextEx != null) {
+                LOGGER.log(Level.SEVERE, "Next exception: ", nextEx);
+            }
             return false;
         } catch (Exception e) {
-            System.err.println("EmailUtil: General Exception while sending email to " + recipientEmail + ". Subject: " + subject);
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "General Exception while sending email to " + recipientEmail + ". Subject: " + subject, e);
             return false;
         }
     }

@@ -1,9 +1,3 @@
-<%-- 
-    Document   : add_supplier
-    Created on : May 16, 2025, 9:25:59 AM
-    Author     : dulan
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="en">

@@ -1,9 +1,3 @@
-<%-- 
-    Document   : Cashier_inventory
-    Created on : May 18, 2025, 10:25:26 PM
-    Author     : NGC
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.util.*" %>
@@ -17,6 +11,7 @@
   <title>Inventory Reports - Swift POS</title>
   <script src="script.js"></script>
   <link rel="Stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
  
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <style>
@@ -231,85 +226,86 @@
       }
     }
     
-           .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.5rem;       /* Vertical and horizontal padding */
-            background-color: #f8f9fa;  /* Very light grey background, almost white like the image */
-            /* border-bottom: 1px solid #e9ecef; */ /* Optional: subtle bottom border if needed */
-            margin-bottom: 25px;        /* Space below the header */
-            /* border-radius: 8px; */  /* Optional: if you want rounded corners matching other cards. Image is not clear on this. */
-        }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;       /* Vertical and horizontal padding */
+      background-color: #f8f9fa;  /* Very light grey background, almost white like the image */
+      /* border-bottom: 1px solid #e9ecef; */ /* Optional: subtle bottom border if needed */
+      margin-bottom: 25px;        /* Space below the header */
+      /* border-radius: 8px; */  /* Optional: if you want rounded corners matching other cards. Image is not clear on this. */
+    }
 
-        .header .page-title {
-            margin: 0;
-            font-size: 1.6em;         /* Prominent title size */
-            color: #212529;           /* Dark, standard text color */
-            font-weight: 600;         /* Semi-bold */
-        }
+    .header .page-title {
+      margin: 0;
+      font-size: 1.6em;         /* Prominent title size */
+      color: #212529;           /* Dark, standard text color */
+      font-weight: 600;         /* Semi-bold */
+    }
 
-        .header .user-profile {
-            display: flex;
-            align-items: center;
-        }
+    .header .user-profile {
+      display: flex;
+      align-items: center;
+    }
 
-        .header .user-profile img { /* Styling for the Swift bird logo */
-            width: 28px;              /* Adjust size as needed */
-            height: auto;             /* Maintain aspect ratio */
-            margin-right: 10px;       /* Space between logo and text */
-            /* No border-radius if it's an icon/logo like the bird */
-        }
+    .header .user-profile img { /* Styling for the Swift bird logo */
+      width: 28px;              /* Adjust size as needed */
+      height: auto;             /* Maintain aspect ratio */
+      margin-right: 10px;       /* Space between logo and text */
+      /* No border-radius if it's an icon/logo like the bird */
+    }
 
-        .header .user-profile div { /* Container for name and role */
-            line-height: 1.3;         /* Adjust line height for tighter spacing */
-            text-align: right;        /* Align text to the right if logo is on left of this block */
-        }
+    .header .user-profile div { /* Container for name and role */
+      line-height: 1.3;         /* Adjust line height for tighter spacing */
+      text-align: right;        /* Align text to the right if logo is on left of this block */
+    }
 
-        .header .user-profile h4 { /* For "John Doe" */
-            margin: 0;
-            font-size: 0.95em;        /* Standard name size */
-            color: #212529;           /* Dark text color */
-            font-weight: 600;         /* Semi-bold */
-        }
+    .header .user-profile h4 { /* For "John Doe" */
+      margin: 0;
+      font-size: 0.95em;        /* Standard name size */
+      color: #212529;           /* Dark text color */
+      font-weight: 600;         /* Semi-bold */
+    }
 
-        .header .user-profile span { /* For "Cashier" */
-            margin: 0;
-            font-size: 0.8em;         /* Smaller text for role */
-            color: #6c757d;           /* Grey color for role */
-            display: block;           /* Ensure it's on its own line if needed */
-        }
-        .menu {
-        list-style: none;
-      }
+    .header .user-profile span { /* For "Cashier" */
+      margin: 0;
+      font-size: 0.8em;         /* Smaller text for role */
+      color: #6c757d;           /* Grey color for role */
+      display: block;           /* Ensure it's on its own line if needed */
+    }
+    
+    .menu {
+      list-style: none;
+    }
 
-      .menu-item {
-        display: flex;
-        align-items: center;
-        padding: 12px 20px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
 
-      .menu-item:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-      }
+    .menu-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
 
-      .menu-item.active {
-        background-color: var(--primary);
-      }
+    .menu-item.active {
+      background-color: var(--primary);
+    }
 
-      .menu-item i {
-        margin-right: 15px;
-        width: 20px;
-        text-align: center;
-      }
+    .menu-item i {
+      margin-right: 15px;
+      width: 20px;
+      text-align: center;
+    }
 
-      .menu-item span {
-        font-weight: 500;
-      }
+    .menu-item span {
+      font-weight: 500;
+    }
 
-    </style>
+  </style>
 </head>
 <body>
    <div class="mobile-top-bar">
@@ -334,12 +330,61 @@
  <div class="main-content">
       <div class="header">
         <h1 class="page-title">Cashier_inventory</h1>
+        <div class="header">
         <div class="user-profile">
-          <img src="../Images/logo.png" alt="Admin Profile">
-          <div>
-            <h4>Admin User</h4>
-          </div>
+          <%
+            Connection userConn = null;
+            String URL = "jdbc:mysql://localhost:3306/Swift_Database";
+            String USER = "root";
+            String PASSWORD = "";
+
+            try {
+                Class.forName("com.mysql.jdbc.Driver"); // Load the driver explicitly
+                userConn = DriverManager.getConnection(URL, USER, PASSWORD);
+                PreparedStatement sql = userConn.prepareStatement("SELECT * FROM users WHERE role = 'Cashier' LIMIT 1");
+                ResultSet result = sql.executeQuery();
+
+                if (result.next()) { 
+                    String profileImagePath = result.getString("profile_image_path");
+                    String firstName = result.getString("first_name");
+                    String role = result.getString("role");
+                    
+                    if (profileImagePath != null && !profileImagePath.trim().isEmpty()) {
+            %>
+                        <img src="<%= request.getContextPath() %>/<%= profileImagePath %>" alt="Profile" width="32" height="32" style="border-radius: 50%;">
+                        <div>
+                            <h4><%= firstName %></h4>
+                            <span><%= role %></span>
+                        </div>
+            <%
+                    } else {
+            %>
+                        <div>
+                            <h4><%= firstName %></h4>
+                            <span><%= role %></span>
+                        </div>
+            <%
+                    }
+                }
+                result.close();
+                sql.close();
+            } catch (Exception ex) {
+                out.println("<p style='color: red;'>Error: " + ex.getMessage() + "</p>");
+                System.err.println("User data error: " + ex.getMessage());
+                ex.printStackTrace();
+            } finally {
+                if (userConn != null) {
+                    try {
+                        userConn.close();
+                    } catch (SQLException e) {
+                        // Log the error but continue
+                        e.printStackTrace();
+                    }
+                }
+            }
+            %>
         </div>
+      </div>
       </div>
   
           <%

@@ -11,6 +11,8 @@
 <%@ page import="org.json.JSONObject" %>
 <%@ page import="java.text.NumberFormat" %>
 <%@ page import="java.util.Locale" %>
+<%@ page import="java.math.BigDecimal" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -18,8 +20,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inventory Dashboard - Swift POS</title>
-  <script src="script.js"></script>
-  <link rel="Stylesheet" href="styles.css">
+  <script src="script.js"></script> <%-- Ensure script.js is present or remove if not used --%>
+  <link rel="Stylesheet" href="styles.css"> <%-- Ensure styles.css is present --%>
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <style>
     /* Additional styles for the inventory dashboard */
@@ -77,18 +79,18 @@
     }
     
     .status-badge.in-stock {
-      background-color: #d1fae5;
-      color: var(--success);
+      background-color: #d1fae5; /* Green for in-stock / positive changes */
+      color: #065f46; 
     }
     
     .status-badge.low-stock {
       background-color: #fef3c7;
-      color: var(--warning);
+      color: #92400e; 
     }
     
     .status-badge.out-of-stock {
-      background-color: #fee2e2;
-      color: var(--danger);
+      background-color: #fee2e2; /* Red for out-of-stock / negative changes */
+      color: #991b1b; 
     }
     
     .inventory-metrics {
@@ -189,15 +191,12 @@
       padding: 20px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       margin-bottom: 20px;
-      /*Adjust height as needed for the chart */
       height: 350px; 
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    
-    /* Removed chart-placeholder as we will draw the actual chart */
-    
+        
     .movement-type {
       display: inline-flex;
       align-items: center;
@@ -253,8 +252,7 @@
     .action-menu-btn:hover {
       background-color: #f1f5f9;
     }
-    
-    /* Low Stock List Styles */
+        
     .low-stock-list {
       list-style: none;
       padding: 0;
@@ -290,25 +288,65 @@
     
     .stock-quantity {
       font-weight: 500;
-      color: var(--danger);
+      color: var(--danger); 
     }
-    
-    /* Responsive adjustments */
+
+    .text-danger { 
+        color: #dc3545 !important;
+    }
+    .text-center { 
+        text-align: center !important;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    th, td {
+        text-align: left;
+        padding: 10px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 14px;
+    }
+    th {
+        background-color: #f8fafc;
+        font-weight: 600;
+        color: var(--secondary);
+    }
+    td .status-badge { 
+        font-size: 12px;
+        padding: 3px 7px;
+    }
+    .action-btn { 
+        background-color: transparent;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        padding: 5px 8px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+    .action-btn:hover {
+        background-color: #f1f5f9;
+    }
+
     @media (max-width: 768px) {
       .inventory-filters {
         flex-direction: column;
       }
-      
       .inventory-search {
         width: 100%;
       }
-      
       .action-button {
         width: 100%;
         justify-content: center;
       }
       .chart-wrapper {
-        height: 300px; /* Adjust for smaller screens */
+        height: 300px; 
+      }
+      th, td {
+          font-size: 13px; 
+          padding: 8px;
       }
     }
   </style>
@@ -319,91 +357,97 @@
     String DB_USER = "root"; 
     String DB_PASSWORD = ""; 
 
+    Connection conn = null; // General connection variable, can be reused if careful with scope
+    PreparedStatement pstmt = null;
+    ResultSet rs = null;
+
     // --- Data for Pie Chart (Monetary Value by Category) ---
-    JSONArray categoryMonetaryValueData = new JSONArray(); // Renamed for clarity
+    JSONArray categoryMonetaryValueData = new JSONArray();
     String pieChartError = null;
-    Connection connPie = null;
     try {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        connPie = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-        // QUERY MODIFIED: Get total monetary value (stock * price) per category
+        Class.forName("com.mysql.cj.jdbc.Driver"); // Load driver once
+        conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
         String pieQuery = "SELECT category, SUM(stock * price) AS total_monetary_value FROM products GROUP BY category HAVING SUM(stock * price) > 0";
-        PreparedStatement psPie = connPie.prepareStatement(pieQuery);
-        ResultSet rsPie = psPie.executeQuery();
-        while (rsPie.next()) {
+        pstmt = conn.prepareStatement(pieQuery);
+        rs = pstmt.executeQuery();
+        while (rs.next()) {
             JSONObject catData = new JSONObject();
-            catData.put("category", rsPie.getString("category"));
-            catData.put("value", rsPie.getDouble("total_monetary_value")); // Storing the monetary value
+            catData.put("category", rs.getString("category"));
+            catData.put("value", rs.getDouble("total_monetary_value"));
             categoryMonetaryValueData.put(catData);
         }
     } catch (Exception e) {
         pieChartError = "Error loading pie chart data: " + e.getMessage();
-        // e.printStackTrace(); // For server-side logging
+        // e.printStackTrace(); 
     } finally {
-        if (connPie != null) try { connPie.close(); } catch (SQLException ex) { /* log ex */ }
+        if (rs != null) try { rs.close(); } catch (SQLException ex) { /* log */ }
+        if (pstmt != null) try { pstmt.close(); } catch (SQLException ex) { /* log */ }
+        if (conn != null) try { conn.close(); } catch (SQLException ex) { /* log */ }
     }
 
     if (pieChartError != null && categoryMonetaryValueData.length() == 0) {
-        JSONObject errorData = new JSONObject().put("category", "Chart Error").put("value", 1);
-        categoryMonetaryValueData.put(errorData);
+        categoryMonetaryValueData.put(new JSONObject().put("category", "Chart Error").put("value", 1));
     } else if (categoryMonetaryValueData.length() == 0) {
-        JSONObject noData = new JSONObject().put("category", "No Monetary Data").put("value", 1);
-        categoryMonetaryValueData.put(noData);
+        categoryMonetaryValueData.put(new JSONObject().put("category", "No Monetary Data").put("value", 1));
     }
 
     // --- Data for Total Monetary Inventory Value Metric Card ---
     double totalInventoryMonetaryValue = 0;
     String totalValueError = null;
-    Connection connTotalValue = null;
     try {
-        connTotalValue = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
         String totalValueQuery = "SELECT SUM(stock * price) AS grand_total_value FROM products";
-        PreparedStatement psTotal = connTotalValue.prepareStatement(totalValueQuery);
-        ResultSet rsTotal = psTotal.executeQuery();
-        if (rsTotal.next()) {
-            totalInventoryMonetaryValue = rsTotal.getDouble("grand_total_value");
+        pstmt = conn.prepareStatement(totalValueQuery);
+        rs = pstmt.executeQuery();
+        if (rs.next()) {
+            totalInventoryMonetaryValue = rs.getDouble("grand_total_value");
         }
     } catch (Exception e) {
         totalValueError = "Error fetching total inventory value: " + e.getMessage();
         // e.printStackTrace();
     } finally {
-        if (connTotalValue != null) try { connTotalValue.close(); } catch (SQLException ex) { /* log ex */ }
+        if (rs != null) try { rs.close(); } catch (SQLException ex) { /* log */ }
+        if (pstmt != null) try { pstmt.close(); } catch (SQLException ex) { /* log */ }
+        if (conn != null) try { conn.close(); } catch (SQLException ex) { /* log */ }
     }
 
-    Locale sriLankaLocale = new Locale("en ", "LK"); 
+    Locale sriLankaLocale = new Locale("en", "LK"); 
     NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(sriLankaLocale);
+    currencyFormatter.setCurrency(Currency.getInstance("LKR")); 
     String formattedTotalInventoryValue = currencyFormatter.format(totalInventoryMonetaryValue);
     
     // --- Data for other Metric Cards ---
     int totalItemsCount = 0; 
     int lowStockItemsCount = 0; 
-    Connection connMetrics = null;
     try {
-        connMetrics = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-        PreparedStatement psTotalItems = connMetrics.prepareStatement("SELECT COUNT(DISTINCT id) AS total_unique_items FROM products");
-        ResultSet rsTotalItems = psTotalItems.executeQuery();
-        if (rsTotalItems.next()) totalItemsCount = rsTotalItems.getInt("total_unique_items");
-        rsTotalItems.close(); psTotalItems.close();
+        conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        pstmt = conn.prepareStatement("SELECT COUNT(DISTINCT id) AS total_unique_items FROM products");
+        rs = pstmt.executeQuery();
+        if (rs.next()) totalItemsCount = rs.getInt("total_unique_items");
+        rs.close(); pstmt.close(); // Close previous statement and resultset
 
-        PreparedStatement psLowStock = connMetrics.prepareStatement("SELECT COUNT(*) AS low_stock_count FROM products WHERE stock <= 10 AND stock > 0"); // Threshold 10
-        ResultSet rsLowStock = psLowStock.executeQuery();
-        if (rsLowStock.next()) lowStockItemsCount = rsLowStock.getInt("low_stock_count");
-        rsLowStock.close(); psLowStock.close();
-    } catch (Exception e) { /* e.printStackTrace(); */ } 
+        pstmt = conn.prepareStatement("SELECT COUNT(*) AS low_stock_count FROM products WHERE stock <= reorder_level AND stock > 0 AND reorder_level > 0");
+        rs = pstmt.executeQuery();
+        if (rs.next()) lowStockItemsCount = rs.getInt("low_stock_count");
+        
+    } catch (Exception e) { 
+      // e.printStackTrace(); 
+    } 
     finally {
-        if (connMetrics != null) try { connMetrics.close(); } catch (SQLException ex) { /* log ex */ }
+        if (rs != null) try { rs.close(); } catch (SQLException ex) { /* log */ }
+        if (pstmt != null) try { pstmt.close(); } catch (SQLException ex) { /* log */ }
+        if (conn != null) try { conn.close(); } catch (SQLException ex) { /* log */ }
     }
 %>
 
   <script type="text/javascript">
-    google.charts.load('current', {'packages':['corechart', 'table']}); // Added 'table' for potential future use like formatted tables
+    google.charts.load('current', {'packages':['corechart']});
     google.charts.setOnLoadCallback(drawInventoryValuePieChart);
 
     function drawInventoryValuePieChart() {
       var data = new google.visualization.DataTable();
       data.addColumn('string', 'Category');
-      // MODIFIED: Label for data column to reflect monetary value
-      data.addColumn('number', 'Monetary Value (Rs.)'); 
+      data.addColumn('number', 'Monetary Value (LKR)'); 
 
       var chartDataFromJSP = <%= categoryMonetaryValueData.toString() %>;
       var pieChartDiv = document.getElementById('piechart_div');
@@ -414,12 +458,12 @@
       }
       
       if (chartDataFromJSP.length === 0 || 
-         (chartDataFromJSP.length === 1 && (chartDataFromJSP[0].category === "Chart Error" || chartDataFromJSP[0].category === "No Monetary Data"))) {
+          (chartDataFromJSP.length === 1 && (chartDataFromJSP[0].category === "Chart Error" || chartDataFromJSP[0].category === "No Monetary Data"))) {
         var message = "No inventory monetary data for categories.";
         if (chartDataFromJSP.length === 1) {
             message = chartDataFromJSP[0].category + ".";
-            if ("<%= pieChartError != null %>" === "true") { // Check if pieChartError was set from JSP
-                 message = "Error loading chart data. Please check logs.";
+            if ("<%= pieChartError != null %>" === "true") { 
+                message = "Error loading chart data. Please check logs.";
             }
         }
         pieChartDiv.innerHTML = '<p style="text-align:center; color:grey; padding-top:20px;">' + message + '</p>';
@@ -430,29 +474,22 @@
         data.addRow([chartDataFromJSP[i].category, chartDataFromJSP[i].value]);
       }
 
-      // Format the 'Monetary Value (Rs.)' column as LKR currency for tooltips.
-      // Note: The symbol 'Rs' might not be standard for all locales with LKR.
-      // 'LKR' is the ISO code. For explicit "Rs." prefix, you might need custom tooltips.
-      // This formatter will attempt to use the locale's default for LKR.
       var formatter = new google.visualization.NumberFormat({
-        prefix: 'Rs. ', // Explicitly adding Rs. prefix
+        prefix: 'LKR ', 
         decimalSymbol: '.',
         groupingSymbol: ',',
-        fractionDigits: 2 // Show two decimal places for currency
+        fractionDigits: 2 
       });
-      formatter.format(data, 1); // Apply formatter to the second column (index 1)
+      formatter.format(data, 1); 
 
       var options = {
-        // MODIFIED: Chart Title
-        title: 'Inventory Value by Category (Rs.)', 
+        title: 'Inventory Value by Category (LKR)', 
         pieHole: 0.4, 
         legend: { position: 'bottom' },
         height: '100%', 
         width: '100%',
-        pieSliceText: 'percentage', // Shows percentage on slices
-        tooltip: { text: 'value', trigger: 'focus' } // Tooltip will show the formatted Rs. value
-        // For more complex tooltips showing category, formatted value, and percentage:
-        // tooltip: {isHtml: true} and generate HTML content for tooltips, or use a DataView with custom columns.
+        pieSliceText: 'percentage', 
+        tooltip: { text: 'value', trigger: 'focus' } 
       };
 
       var chart = new google.visualization.PieChart(pieChartDiv);
@@ -487,60 +524,46 @@
         <h1 class="page-title">Inventory Dashboard</h1>
         <div class="user-profile">
           <%
-            Connection userConn = null;
-            String URL = "jdbc:mysql://localhost:3306/Swift_Database";
-            String USER = "root";
-            String PASSWORD = "";
-
+            Connection userConnHeader = null; // Use a distinct variable name
+            PreparedStatement userSqlHeader = null;
+            ResultSet userResultHeader = null;
             try {
-                // Updated to use newer driver name
-                Class.forName("com.mysql.cj.jdbc.Driver");
-                userConn = DriverManager.getConnection(URL, USER, PASSWORD);
+                userConnHeader = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+                userSqlHeader = userConnHeader.prepareStatement("SELECT profile_image_path, first_name FROM users WHERE role = 'Admin' LIMIT 1");
+                userResultHeader = userSqlHeader.executeQuery();
 
-                PreparedStatement sql = userConn.prepareStatement("SELECT * FROM users WHERE role = 'admin' LIMIT 1");
-                ResultSet result = sql.executeQuery();
+                if (userResultHeader.next()) {
+                    String profileImagePath = userResultHeader.getString("profile_image_path");
+                    String firstName = userResultHeader.getString("first_name") != null ? userResultHeader.getString("first_name") : "Admin";
 
-                if (result.next()) {
-                    String profileImagePath = result.getString("profile_image_path");
-                    String firstName = result.getString("first_name") != null ? result.getString("first_name") : "Admin";
-
-                    // Handle null or empty profile image path
-                    if (profileImagePath == null || profileImagePath.trim().isEmpty()) {
-                        profileImagePath = "/Images/default-profile.png"; // Default image path
+                    if (profileImagePath == null || profileImagePath.trim().isEmpty() || profileImagePath.trim().equals("uploads\\profile_images\\")) {
+                        profileImagePath = "Images/default-profile.png"; 
+                    } else {
+                        profileImagePath = profileImagePath.replace("\\", "/");
                     }
-          %>
-                    <img src="${pageContext.request.contextPath}/<%= result.getString("profile_image_path") %>"
+        %>
+                    <img src="${pageContext.request.contextPath}/<%= profileImagePath %>"
                          alt="Admin Profile"
-                         onerror="this.src='<img src="${pageContext.request.contextPath}<%= result.getString("profile_image_path") %>" alt="Admin Profile">
+                         onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/Images/default-profile.png';">
                     <div>
                         <h4><%= firstName %></h4>
                     </div>
-          <%
+        <%
                 } else {
-          %>
+        %>
                     <img src="${pageContext.request.contextPath}/Images/default-profile.png" alt="Default Profile">
                     <div>
                         <h4>Admin</h4>
                     </div>
-          <%
+        <%
                 }
-                result.close();
-                sql.close();
-            } catch (ClassNotFoundException e) {
-                out.println("<p class='text-danger text-center'>Database driver not found: " + e.getMessage() + "</p>");
-            } catch (SQLException e) {
-                out.println("<p class='text-danger text-center'>Database error: " + e.getMessage() + "</p>");
-            } catch (Exception ex) {
-                out.println("<p class='text-danger text-center'>Error: " + ex.getMessage() + "</p>");
+            } catch (Exception ex) { // Catch generic Exception after specific ones if any
+                out.println("<p class='text-danger text-center'>Error loading profile: " + ex.getMessage() + "</p>");
+                 // ex.printStackTrace();
             } finally {
-                if (userConn != null) {
-                    try {
-                        userConn.close();
-                    } catch (SQLException e) {
-                        // Log the error but continue
-                        e.printStackTrace();
-                    }
-                }
+                if (userResultHeader != null) try { userResultHeader.close(); } catch (SQLException e) { /* log */ }
+                if (userSqlHeader != null) try { userSqlHeader.close(); } catch (SQLException e) { /* log */ }
+                if (userConnHeader != null) try { userConnHeader.close(); } catch (SQLException e) { /* log */ }
             }
           %>
         </div>
@@ -578,7 +601,7 @@
         </div>
         <div class="metric-card">
           <div class="metric-title">STOCK TURNOVER RATE</div>
-          <div class="metric-value">4.7x</div> 
+          <div class="metric-value">N/A</div> 
           <div class="metric-change positive">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
             ...
@@ -600,22 +623,44 @@
           Generate Report
         </button>
          <button class="action-button secondary" onclick="window.location.href='purchases.jsp'">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-            Create Purchase Order
+           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+           Create Purchase Order
         </button>
       </div>
       
       <div class="inventory-filters">
         <div class="inventory-search">
-          <input type="text" placeholder="Search by name, SKU, or category...">
-          <button aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+          <input type="text" placeholder="Search by name, SKU, or category..." id="inventorySearchInput">
+          <button aria-label="Search" id="inventorySearchButton"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
         </div>
-        <div class="filter-item"><div class="filter-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></div>Filters</div>
-        <div class="filter-item"><div class="filter-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></div>Sort By</div>
+        <div class="filter-item" id="filterButton"><div class="filter-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></div>Filters</div>
+        <div class="filter-item" id="sortButton"><div class="filter-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></div>Sort By</div>
       </div>
       
       <div class="category-filter">
-        <div class="category-item active">All Items</div><div class="category-item">Beverages</div><div class="category-item">Bakery</div><div class="category-item">Dairy</div><div class="category-item">Snacks</div><div class="category-item">Packaging</div><div class="category-item">Equipment</div><div class="category-item">Others</div>
+        <div class="category-item active" data-category="All">All Items</div>
+        <%
+            Connection connCategoriesFilter = null; // Distinct variable
+            PreparedStatement psCategoriesFilter = null;
+            ResultSet rsCategoriesFilter = null;
+            try {
+                connCategoriesFilter = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+                psCategoriesFilter = connCategoriesFilter.prepareStatement("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category <> '' ORDER BY category");
+                rsCategoriesFilter = psCategoriesFilter.executeQuery();
+                while(rsCategoriesFilter.next()){
+                    String categoryName = rsCategoriesFilter.getString("category");
+        %>
+                    <div class="category-item" data-category="<%= categoryName %>"><%= categoryName %></div>
+        <%
+                }
+            } catch (Exception e) {
+                // e.printStackTrace(); 
+            } finally {
+                if (rsCategoriesFilter != null) try { rsCategoriesFilter.close(); } catch (SQLException ex) {/* log */}
+                if (psCategoriesFilter != null) try { psCategoriesFilter.close(); } catch (SQLException ex) {/* log */}
+                if (connCategoriesFilter != null) try { connCategoriesFilter.close(); } catch (SQLException ex) {/* log */}
+            }
+        %>
       </div>
       
       <div class="modules-container">
@@ -623,62 +668,209 @@
           <div class="module-header">Low Stock Alert</div>
           <div class="module-content"><ul class="low-stock-list">
             <%
-              Connection connLowStock = null;
+              Connection connLowStockList = null; 
+              PreparedStatement psLowList = null;    
+              ResultSet rsLowList = null;        
               try {
-                  connLowStock = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-                  PreparedStatement psLow = connLowStock.prepareStatement("SELECT name, supplier, stock FROM products WHERE stock <= 10 AND stock > 0 ORDER BY stock ASC LIMIT 5");
-                  ResultSet rsLow = psLow.executeQuery(); boolean foundLowStock = false;
-                  while (rsLow.next()) { foundLowStock = true; %>
-              <li class="stock-item"><div class="stock-info"><span class="stock-name"><%= rsLow.getString("name") %></span><span class="stock-supplier"><%= rsLow.getString("supplier") != null ? rsLow.getString("supplier") : "N/A" %></span></div><div class="stock-quantity"><%= rsLow.getInt("stock") %> Items left</div></li>
-            <% } if (!foundLowStock) out.println("<li class='stock-item' style='justify-content:center;'><p>No items currently low on stock.</p></li>");
-                  rsLow.close(); psLow.close();
-              } catch (Exception ex) { out.println("<li class='stock-item'><p class='text-danger'>Error: " + ex.getMessage() + "</p></li>"); } 
-              finally { if (connLowStock != null) try { connLowStock.close(); } catch (SQLException e) { /* log e */ } }
+                  connLowStockList = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+                  psLowList = connLowStockList.prepareStatement(
+                      "SELECT name, supplier, stock FROM products " + // Removed reorder_level for now to simplify if it's causing issues
+                      "WHERE stock <= 10 AND stock > 0 " + // Using fixed threshold 10 for low stock
+                      "ORDER BY stock ASC LIMIT 5"
+                  );
+                  rsLowList = psLowList.executeQuery(); boolean foundLowStock = false;
+                  while (rsLowList.next()) { foundLowStock = true; 
+            %>
+            <li class="stock-item">
+                <div class="stock-info">
+                    <span class="stock-name"><%= rsLowList.getString("name") %></span>
+                    <span class="stock-supplier"><%= rsLowList.getString("supplier") != null ? rsLowList.getString("supplier") : "N/A" %></span>
+                </div>
+                <div class="stock-quantity"><%= rsLowList.getInt("stock") %> Items left</div>
+            </li>
+            <% 
+                } 
+                if (!foundLowStock) {
+                    out.println("<li class='stock-item' style='justify-content:center;'><p>No items currently low on stock (threshold: 10).</p></li>");
+                }
+              } catch (Exception ex) { 
+                  out.println("<li class='stock-item'><p class='text-danger'>Error fetching low stock: " + ex.getMessage() + "</p></li>"); 
+                  // ex.printStackTrace();
+              } finally { 
+                  if (rsLowList != null) try { rsLowList.close(); } catch (SQLException e) { /* log */ }
+                  if (psLowList != null) try { psLowList.close(); } catch (SQLException e) { /* log */ }
+                  if (connLowStockList != null) try { connLowStockList.close(); } catch (SQLException e) { /* log */ } 
+              }
             %>
             </ul></div>
         </div>
         <div class="module-card">
-          <div class="module-header">Inventory Value by Category (Rs.)</div>
+          <div class="module-header">Inventory Value by Category (LKR)</div>
           <div class="module-content"><div class="chart-wrapper"><div id="piechart_div" style="width: 100%; height: 100%;"></div></div></div>
         </div>
       </div>
       
       <div class="module-card" style="margin-top: 20px;">
-        <div class="module-header">Inventory Activities (Recent)</div>
-        <div class="module-content"><table><thead><tr><th>Product</th><th>Type</th><th>Quantity</th><th>Date</th><th>User</th><th>Reference</th><th>Actions</th></tr></thead><tbody>
-            <%  
-              Connection connActivities = null;
-              try {
-                  connActivities = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-                  PreparedStatement psAct = connActivities.prepareStatement("SELECT name, stock FROM products ORDER BY RAND() LIMIT 3"); ResultSet rsAct = psAct.executeQuery();
-                  boolean hasActivities = false; String[] types = {"Stock In", "Sale", "Adjustment"}; String[] refs = {"#PO-4576", "#INV-1023", "#ADJ-003"}; int actCount = 0;
-                  while (rsAct.next() && actCount < 3) { hasActivities = true; %>
-              <tr><td><%= rsAct.getString("name") %></td><td><span class="status completed"><%= types[actCount % types.length] %></span></td><td><%= (rsAct.getInt("stock") / (actCount + 2)) + (actCount % 2 == 0 ? 5 : -2) %></td><td>May <%= 16 - actCount % 3 %>, 2025</td><td>Admin User</td><td><%= refs[actCount % refs.length] %></td><td><button class="action-menu-btn" title="View Details">📝</button></td></tr>
-            <% actCount++; } if (!hasActivities) out.println("<tr><td colspan='7' class='text-center'>No recent activities.</td></tr>");
-                  rsAct.close(); psAct.close();
-              } catch (Exception ex) { out.println("<tr><td colspan='7' class='text-danger text-center'>Error: " + ex.getMessage() + "</td></tr>"); } 
-              finally { if (connActivities != null) try { connActivities.close(); } catch (SQLException e) { /* log e */ } }
-            %>
-            </tbody></table></div>
+          <div class="module-header">Inventory Activities (Recent)</div>
+          <div class="module-content">
+              <table>
+                  <thead>
+                      <tr>
+                          <th>Product Name</th>
+                          <th>Movement Type</th>
+                          <th>Quantity Change</th>
+                          <th>Date</th>
+                          <th>User</th>
+                          <th>Reference</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <%
+                          Connection connActivities = null;
+                          PreparedStatement psAct = null;
+                          ResultSet rsAct = null;
+                          try {
+                              connActivities = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+                              String queryActivities = "SELECT p.name AS product_name, im.movement_type, " +
+                                                       "im.quantity_change, im.movement_date, u.first_name AS user_name, im.user_id AS actual_user_id, " +
+                                                       "im.reference_type, im.reference_id " +
+                                                       "FROM inventory_movements im " +
+                                                       "JOIN products p ON im.product_id = p.id " +
+                                                       "LEFT JOIN users u ON im.user_id = u.id " +
+                                                       "ORDER BY im.movement_date DESC LIMIT 5";
+                              psAct = connActivities.prepareStatement(queryActivities);
+                              rsAct = psAct.executeQuery();
+                              boolean hasActivities = false;
+                              while (rsAct.next()) {
+                                  hasActivities = true;
+                                  String productName = rsAct.getString("product_name");
+                                  String movementType = rsAct.getString("movement_type");
+                                  BigDecimal quantityChange = rsAct.getBigDecimal("quantity_change");
+                                  Timestamp movementDateTs = rsAct.getTimestamp("movement_date");
+                                  String movementDateStr = (movementDateTs != null) ? new SimpleDateFormat("MMM dd, yyyy HH:mm").format(movementDateTs) : "N/A";
+                                  String userName = rsAct.getString("user_name");
+                                  int actualUserId = rsAct.getInt("actual_user_id");
+
+                                  if (userName == null || userName.trim().isEmpty()) {
+                                      if (actualUserId != 0 && rsAct.wasNull()) { 
+                                          userName = "User ID: " + actualUserId;
+                                      } else {
+                                          userName = "N/A"; 
+                                      }
+                                  }
+                                  String referenceType = rsAct.getString("reference_type");
+                                  String referenceId = rsAct.getString("reference_id");
+                                  String referenceDisplay = ((referenceType != null && !referenceType.isEmpty()) ? referenceType + ": " : "") + ((referenceId != null && !referenceId.isEmpty()) ? referenceId : "");
+                                  if (referenceDisplay.trim().isEmpty() || referenceDisplay.trim().equals(":")) referenceDisplay = "N/A";
+                      %>
+                      <tr>
+                          <td><%= productName %></td>
+                          <td>
+                              <%
+                                  String typeClass = "";
+                                  String typeText = movementType; 
+                                  if (quantityChange.doubleValue() > 0) {
+                                      typeClass = "status-badge in-stock"; 
+                                  } else if (quantityChange.doubleValue() < 0) {
+                                      typeClass = "status-badge out-of-stock"; 
+                                  } else {
+                                      typeClass = "status-badge"; 
+                                  }
+                                  switch (movementType) {
+                                      case "purchase_receipt": typeText = "Purchase Receipt"; break;
+                                      case "sale_dispatch": typeText = "Sale Dispatch"; break;
+                                      case "stock_adjustment_add": typeText = "Adjustment (Add)"; break;
+                                      case "stock_adjustment_subtract": typeText = "Adjustment (Subtract)"; break;
+                                      case "return_from_customer": typeText = "Customer Return"; break;
+                                      case "return_to_supplier": typeText = "Supplier Return"; break;
+                                      case "initial_stock_setup": typeText = "Initial Stock"; break;
+                                      case "damaged_goods": typeText = "Damaged"; break;
+                                      case "expired_goods": typeText = "Expired"; break;
+                                      case "internal_transfer_out": typeText = "Transfer Out"; break;
+                                      case "internal_transfer_in": typeText = "Transfer In"; break;
+                                      case "others": typeText = "Others"; break;
+                                      default: 
+                                        String temp = movementType.replace("_", " ");
+                                        typeText = temp.substring(0, 1).toUpperCase() + temp.substring(1).toLowerCase();
+                                        break;
+                                  }
+                              %>
+                              <span class="<%= typeClass %>"><%= typeText %></span>
+                          </td>
+                          <td><%= quantityChange.signum() > 0 ? "+" : "" %><%= quantityChange.toString() %></td>
+                          <td><%= movementDateStr %></td>
+                          <td><%= userName %></td>
+                          <td><%= referenceDisplay %></td>
+                      </tr>
+                      <%
+                              }
+                              if (!hasActivities) {
+                                  out.println("<tr><td colspan='6' class='text-center'>No recent inventory activities found.</td></tr>");
+                              }
+                          } catch (Exception ex) {
+                              out.println("<tr><td colspan='6' class='text-danger text-center'>Error loading activities: " + ex.getMessage() + "</td></tr>");
+                              // ex.printStackTrace(); 
+                          } finally {
+                              if (rsAct != null) try { rsAct.close(); } catch (SQLException e) { /* log */ }
+                              if (psAct != null) try { psAct.close(); } catch (SQLException e) { /* log */ }
+                              if (connActivities != null) try { connActivities.close(); } catch (SQLException e) { /* log */ }
+                          }
+                      %>
+                  </tbody>
+              </table>
+          </div>
       </div>
       
       <div class="module-card" style="margin-top: 20px;">
         <div class="module-header">Stock Levels - Top Products</div>
-        <div class="module-content"><table><thead><tr><th>Product</th><th>SKU</th><th>Category</th><th>Current Stock</th><th>Reorder Level</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+        <div class="module-content"><table><thead><tr><th>Product</th><th>SKU</th><th>Category</th><th>Current Stock</th><th>Reorder Level</th><th>Status</th></tr></thead><tbody>
             <%  
               Connection connStockLvl = null;
+              PreparedStatement psSLvl = null;
+              ResultSet rsSLvl = null;
               try {
                   connStockLvl = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-                  PreparedStatement psSLvl = connStockLvl.prepareStatement("SELECT name, sku, category, stock, COALESCE(reorder_level, 10) as reorder_level FROM products ORDER BY stock DESC LIMIT 10");
-                  ResultSet rsSLvl = psSLvl.executeQuery(); boolean hasStockLevels = false;
-                  while (rsSLvl.next()) { hasStockLevels = true; int stock = rsSLvl.getInt("stock"); int reorderLvl = rsSLvl.getInt("reorder_level");
-                      String statusClass = (stock <= 0) ? "out-of-stock" : (stock <= reorderLvl) ? "low-stock" : "in-stock";
-                      String statusText = (stock <= 0) ? "Out of Stock" : (stock <= reorderLvl) ? "Low Stock" : "In Stock"; %>
-              <tr><td><%= rsSLvl.getString("name") %></td><td><%= rsSLvl.getString("sku") != null ? rsSLvl.getString("sku") : "N/A" %></td><td><%= rsSLvl.getString("category") != null ? rsSLvl.getString("category") : "N/A" %></td><td><%= stock %></td><td><%= reorderLvl %></td><td><span class="status-badge <%= statusClass %>"><%= statusText %></span></td><td><button class="action-btn" title="Adjust Stock">📝</button></td></tr>
-            <% } if (!hasStockLevels) out.println("<tr><td colspan='7' class='text-center'>No stock data.</td></tr>");
-                  rsSLvl.close(); psSLvl.close();
-              } catch (Exception ex) { out.println("<tr><td colspan='7' class='text-danger text-center'>Error: " + ex.getMessage() + "</td></tr>"); } 
-              finally { if (connStockLvl != null) try { connStockLvl.close(); } catch (SQLException e) { /* log e */ } }
+                  psSLvl = connStockLvl.prepareStatement(
+                      "SELECT name, sku, category, stock, COALESCE(reorder_level, 0) as reorder_level FROM products ORDER BY stock DESC LIMIT 10"
+                  );
+                  rsSLvl = psSLvl.executeQuery(); boolean hasStockLevels = false;
+                  while (rsSLvl.next()) { hasStockLevels = true; 
+                      String productNameSL = rsSLvl.getString("name"); // Explicitly get product name
+                      int stock = rsSLvl.getInt("stock");
+                      int reorderLvl = rsSLvl.getInt("reorder_level");
+                      String statusClass = "";
+                      String statusText = "";
+                      if (stock <= 0) {
+                          statusClass = "out-of-stock";
+                          statusText = "Out of Stock";
+                      } else if (reorderLvl > 0 && stock <= reorderLvl) { 
+                          statusClass = "low-stock";
+                          statusText = "Low Stock";
+                      } else {
+                          statusClass = "in-stock";
+                          statusText = "In Stock";
+                      }
+            %>
+            <tr>
+                <td><%= productNameSL %></td>
+                <td><%= rsSLvl.getString("sku") != null ? rsSLvl.getString("sku") : "N/A" %></td>
+                <td><%= rsSLvl.getString("category") != null ? rsSLvl.getString("category") : "N/A" %></td>
+                <td><%= stock %></td>
+                <td><%= reorderLvl > 0 ? reorderLvl : "N/A" %></td>
+                <td><span class="status-badge <%= statusClass %>"><%= statusText %></span></td>
+          
+            <% 
+                } if (!hasStockLevels) {
+                    out.println("<tr><td colspan='7' class='text-center'>No stock data.</td></tr>");
+                }
+              } catch (Exception ex) { 
+                  out.println("<tr><td colspan='7' class='text-danger text-center'>Error fetching stock levels: " + ex.getMessage() + "</td></tr>"); 
+                  // ex.printStackTrace();
+              } finally { 
+                  if (rsSLvl != null) try { rsSLvl.close(); } catch (SQLException e) { /* log */ }
+                  if (psSLvl != null) try { psSLvl.close(); } catch (SQLException e) { /* log */ }
+                  if (connStockLvl != null) try { connStockLvl.close(); } catch (SQLException e) { /* log */ }
+              }
             %>
             </tbody></table></div>
       </div>
@@ -691,8 +883,36 @@
     const sidebar = document.getElementById('sidebar');
     if (mobileNavToggle && sidebar) { mobileNavToggle.addEventListener('click', () => sidebar.classList.toggle('active')); }
     document.addEventListener('click', function(event) { if (sidebar && sidebar.classList.contains('active') && !sidebar.contains(event.target) && !mobileNavToggle.contains(event.target)) { sidebar.classList.remove('active'); } });
+    
     const categoryItems = document.querySelectorAll('.category-item');
-    categoryItems.forEach(item => { item.addEventListener('click', () => { categoryItems.forEach(i => i.classList.remove('active')); item.classList.add('active'); console.log('Category filter:', item.textContent); }); });
+    categoryItems.forEach(item => { 
+        item.addEventListener('click', () => { 
+            categoryItems.forEach(i => i.classList.remove('active')); 
+            item.classList.add('active'); 
+            console.log('Category filter:', item.dataset.category); 
+        }); 
+    });
+
+    const searchInput = document.getElementById('inventorySearchInput');
+    const searchButton = document.getElementById('inventorySearchButton');
+    const filterButton = document.getElementById('filterButton');
+    const sortButton = document.getElementById('sortButton');
+
+    if(searchButton && searchInput) {
+        searchButton.addEventListener('click', () => {
+            console.log('Search for:', searchInput.value);
+        });
+    }
+    if(filterButton) {
+        filterButton.addEventListener('click', () => {
+            console.log('Open filter options');
+        });
+    }
+    if(sortButton) {
+        sortButton.addEventListener('click', () => {
+            console.log('Open sort options');
+        });
+    }
   </script>
 </body>
 </html>

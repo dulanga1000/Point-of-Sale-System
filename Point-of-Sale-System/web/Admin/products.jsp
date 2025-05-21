@@ -1,6 +1,6 @@
-<%-- 
-    Document   : products
-    Created on : May 16, 2025, 9:26:53 AM
+<%--
+    Document   : purchases
+    Created on : May 16, 2025, 9:26:53 AM
     Author     : dulan
 --%>
 
@@ -39,7 +39,7 @@
     // --- Database Interaction Scriptlet ---
     Connection conn = null;
     List<Product> productList = null;
-    String errorMessage = null;
+    String errorMessageJsp = null; // Renamed to avoid conflict with errorParam
     int totalProducts = 0;
     int totalPages = 0;
     int lowStockCount = 0;
@@ -73,12 +73,12 @@
             uniqueCategoryCount = productDAO.getUniqueCategoryCount();
         } else {
             // If connection failed, set an error message
-            errorMessage = "Error: Database connection failed.";
+            errorMessageJsp = "Error: Database connection failed.";
         }
     } catch (Exception e) {
         // Catch any exceptions during the process (DB errors, etc.)
         e.printStackTrace(); // Log the error on the server console
-        errorMessage = "Error retrieving products: " + e.getMessage();
+        errorMessageJsp = "Error retrieving products: " + e.getMessage();
     } finally {
         // Always close the database connection
         DBConnection.closeConnection(conn);
@@ -104,10 +104,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products Management</title>
     <%-- Ensure these file paths are correct relative to your JSP --%>
-    <script src="${pageContext.request.contextPath}/script.js"></script>
-    <link rel="Stylesheet" href="styles.css">
+    <script src="${pageContext.request.contextPath}/Admin/script.js"></script> <%-- Adjusted path to Admin folder if script.js is there --%>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/Admin/styles.css"> <%-- Adjusted path --%>
     <style>
-        /* Additional CSS for Products page */
+        /* Additional CSS for Products page (Copied from your original JSP) */
 
         /* Action Bar Styles */
         .action-bar {
@@ -174,48 +174,48 @@
             cursor: pointer;
             font-weight: 500;
             transition: background-color 0.2s;
-             text-decoration: none; /* Style the link inside the button */
+            text-decoration: none; 
         }
 
         .primary-button:hover {
             background-color: var(--primary-dark);
         }
          .primary-button a {
-             text-decoration: none; /* Style the link inside the button */
-             color: inherit;
+            text-decoration: none; 
+            color: inherit;
          }
 
 
         /* Products Table Styles */
         .products-table {
             width: 100%;
-            border-collapse: collapse; /* Added for cleaner table borders */
-             margin-top: 15px; /* Added some space below header */
+            border-collapse: collapse; 
+            margin-top: 15px; 
         }
-         /* Table Headers */
-         .products-table thead th {
-             padding: 12px 15px;
-             text-align: left;
-             font-size: 13px;
-             font-weight: 600;
-             color: var(--secondary);
-             border-bottom: 1px solid #e2e8f0;
-         }
-         /* Table Data Cells */
-         .products-table tbody td {
-             padding: 12px 15px;
-             font-size: 14px;
-             color: var(--dark);
-             border-bottom: 1px solid #e2e8f0;
-         }
+        /* Table Headers */
+        .products-table thead th {
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--secondary);
+            border-bottom: 1px solid #e2e8f0;
+        }
+        /* Table Data Cells */
+        .products-table tbody td {
+            padding: 12px 15px;
+            font-size: 14px;
+            color: var(--dark);
+            border-bottom: 1px solid #e2e8f0;
+        }
 
-         .products-table tbody tr:last-child td {
-             border-bottom: none; /* No border on the last row */
-         }
+        .products-table tbody tr:last-child td {
+            border-bottom: none; /* No border on the last row */
+        }
 
-         .products-table tbody tr:hover {
-             background-color: #f9fafb; /* Hover effect */
-         }
+        .products-table tbody tr:hover {
+            background-color: #f9fafb; /* Hover effect */
+        }
 
 
         .module-header {
@@ -346,26 +346,26 @@
             border-radius: 4px;
             font-size: 12px;
             font-weight: 500;
-            display: inline-block; /* Ensure it doesn't take full width */
+            display: inline-block; 
         }
 
         .status.completed { /* Use for 'Active' */
             background-color: #d1fae5;
-            color: #047857; /* Deeper green */
+            color: #047857; 
         }
 
         .status.pending { /* Use for 'Inactive' or other non-active states */
             background-color: #fef3c7;
-            color: #d97706; /* Deeper yellow/orange */
+            color: #d97706; 
         }
 
-        .status.warning { /* Use for 'Low Stock' explicitly if needed, but stock level handles visually */
+        .status.warning { 
             background-color: #fef3c7;
             color: #d97706;
         }
 
          .trend.neutral {
-             color: var(--secondary);
+            color: var(--secondary);
          }
 
         /* Pagination Styles */
@@ -444,20 +444,19 @@
                 align-items: center;
             }
 
-            /* Responsive Table - Horizontal Scroll */
             .module-content {
-                overflow-x: auto; /* Enable horizontal scrolling */
+                overflow-x: auto; 
             }
 
             .products-table {
-                min-width: 700px; /* Ensure table has a minimum width to enable scrolling */
+                min-width: 700px; 
             }
         }
 
         @media (max-width: 480px) {
             .header-actions {
                 margin-top: 10px;
-                justify-content: flex-start; /* Align actions left on small screens */
+                justify-content: flex-start; 
             }
 
             .module-header {
@@ -481,15 +480,29 @@
             color: var(--secondary);
             text-align: center;
         }
-         /* Error message styling */
-         .error-message {
+        /* Error message styling (can be reused for success messages with different colors) */
+        .feedback-message { /* Generic class for feedback */
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .error-message-jsp { /* Specific for JSP scriptlet variable */
+            color: red;
+            background-color: #ffebeb;
+            border: 1px solid red;
+        }
+        .success-message-url { /* For URL param success */
+            color: green;
+            background-color: #e6ffe6;
+            border: 1px solid green;
+        }
+        .error-message-url { /* For URL param error */
              color: red;
-             padding: 10px;
-             border: 1px solid red;
              background-color: #ffebeb;
-             margin-bottom: 15px;
-             border-radius: 4px;
-         }
+             border: 1px solid red;
+        }
+
     </style>
     
 </head>
@@ -509,7 +522,6 @@
                 <h2>Swift</h2>
             </div>
             <%-- Include the menu here --%>
-            <%-- Assuming menu.jsp contains the sidebar menu structure --%>
             <jsp:include page="menu.jsp" />
         </div>
 
@@ -517,42 +529,80 @@
             <div class="header">
                 <h1 class="page-title">Products Management</h1>
                 <div class="user-profile">
-        <%
-            Connection userConn = null;
-            String URL = "jdbc:mysql://localhost:3306/Swift_Database";
-            String USER = "root";
-            String PASSWORD = "";
+            <%
+                Connection userConn = null;
+                String URL = "jdbc:mysql://localhost:3306/Swift_Database"; // Ensure this matches DBConnection
+                String USER = "root"; // Ensure this matches DBConnection
+                String PASSWORD = "";   // Ensure this matches DBConnection
 
-            try {
-                Class.forName("com.mysql.jdbc.Driver"); // Load the driver explicitly
-                userConn = DriverManager.getConnection(URL, USER, PASSWORD);
-                PreparedStatement sql = userConn.prepareStatement("SELECT * FROM users WHERE role = 'admin' LIMIT 1");
-                ResultSet result = sql.executeQuery();
+                try {
+                    Class.forName("com.mysql.cj.jdbc.Driver"); // Updated driver
+                    userConn = DriverManager.getConnection(URL, USER, PASSWORD);
+                    PreparedStatement sql = userConn.prepareStatement("SELECT * FROM users WHERE role = 'admin' LIMIT 1");
+                    ResultSet result = sql.executeQuery();
 
-                if (result.next()) { %>
-                    <img src="${pageContext.request.contextPath}/<%= result.getString("profile_image_path") %>" alt="Admin Profile">
-                    <div>
-                        <h4><%= result.getString("first_name") %></h4>
-                    </div>
-                <% }
-                result.close();
-                sql.close();
-            } catch (Exception ex) {
-                out.println("<p class='text-danger text-center'>Error: " + ex.getMessage() + "</p>");
-            } finally {
-                if (userConn != null) {
-                    try {
-                        userConn.close();
-                    } catch (SQLException e) {
-                        // Log the error but continue
-                        e.printStackTrace();
+                    if (result.next()) { %>
+                        <img src="${pageContext.request.contextPath}/<%= result.getString("profile_image_path") != null ? result.getString("profile_image_path") : "Images/placeholder-user.png" %>" alt="Admin Profile">
+                        <div>
+                            <h4><%= result.getString("first_name") %></h4>
+                        </div>
+                    <% }
+                    result.close();
+                    sql.close();
+                } catch (Exception ex) {
+                    out.println("<p class='text-danger text-center'>Error loading user: " + ex.getMessage() + "</p>");
+                    ex.printStackTrace();
+                } finally {
+                    if (userConn != null) {
+                        try {
+                            userConn.close();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }
-        %>
+            %>
                 </div>
             </div>
 
+            <%
+                String successParam = request.getParameter("success");
+                String errorParam = request.getParameter("error");
+                String errorDetails = request.getParameter("details");
+
+                if (successParam != null) {
+                    if ("delete".equals(successParam)) {
+                        out.println("<p class='feedback-message success-message-url'>Product deleted successfully!</p>");
+                    } else if ("update".equals(successParam)) { // Example for update
+                        out.println("<p class='feedback-message success-message-url'>Product updated successfully!</p>");
+                    }
+                    // Add other success messages if needed
+                }
+
+                if (errorParam != null) {
+                    String displayErrorMessage = "An error occurred while processing your request.";
+                    if ("invalid_id".equals(errorParam)) {
+                        displayErrorMessage = "Error: The product ID provided was invalid.";
+                    } else if ("missing_id".equals(errorParam)) {
+                        displayErrorMessage = "Error: No product ID was provided for the operation.";
+                    } else if ("db_delete_failed".equals(errorParam)) {
+                        displayErrorMessage = "Error: Failed to delete the product from the database. The product might not exist, or it could be referenced by other data (e.g., in existing orders). Check server logs for more details.";
+                    } else if ("db_connection_failed".equals(errorParam)) {
+                        displayErrorMessage = "Error: Could not connect to the database. Please check server logs.";
+                    } else if ("sql_exception".equals(errorParam)) {
+                        displayErrorMessage = "Database Error: An SQL exception occurred. Please check server logs for specific details.";
+                        if (errorDetails != null && !errorDetails.isEmpty()) {
+                            displayErrorMessage += " Details: " + errorDetails.replace("<", "&lt;").replace(">", "&gt;");
+                        }
+                    } else if ("unexpected".equals(errorParam)) {
+                        displayErrorMessage = "An unexpected error occurred. Please try again or check server logs.";
+                    } else if ("db_update".equals(errorParam)){
+                         displayErrorMessage = "Error: Failed to update product in the database.";
+                    }
+                     // Add other specific error messages based on parameters your servlets might send
+                    out.println("<p class='feedback-message error-message-url'>" + displayErrorMessage + "</p>");
+                }
+            %>
             <div class="action-bar">
                 <div class="search-container">
                     <input type="text" placeholder="Search products..." class="search-input" id="searchInput">
@@ -575,7 +625,6 @@
                         <option value="Dairy">Dairy</option>
                         <option value="Syrups">Syrups</option>
                         <option value="Supplies">Supplies</option>
-                        <%-- Add dynamic supplier options here if available --%>
                     </select>
 
                     <select class="filter-select" id="supplierFilter">
@@ -585,7 +634,6 @@
                         <option value="sweet-supplies">Sweet Supplies Ltd.</option>
                         <option value="package-solutions">Package Solutions</option>
                         <option value="flavor-masters">Flavor Masters</option>
-                        <%-- Add dynamic supplier options here if available --%>
                     </select>
 
                     <select class="filter-select" id="stockFilter">
@@ -596,65 +644,47 @@
                     </select>
                 </div>
 
-                <%-- Link the button to the add product page --%>
                 <button class="primary-button">
-                     <a href="<%= request.getContextPath() %>/Admin/add_product.jsp">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                             <line x1="12" y1="5" x2="12" y2="19"></line>
-                             <line x1="5" y1="12" x2="19" y2="12"></line>
-                         </svg>
-                         Add New Product
-                     </a>
-                 </button>
+                    <a href="<%= request.getContextPath() %>/Admin/add_product.jsp">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add New Product
+                    </a>
+                </button>
             </div>
 
             <div class="stats-container">
                 <div class="stat-card">
                     <h3>TOTAL PRODUCTS</h3>
-                    <%-- Display actual total product count --%>
                     <div class="value"><%= totalProducts %></div>
                     <div class="trend up">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="18 15 12 9 6 15"></polyline>
-                        </svg>
-                        <%-- Placeholder: Dynamically show new products added today/this week --%>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                         5 new products added
                     </div>
                 </div>
-
                 <div class="stat-card">
                     <h3>LOW STOCK ITEMS</h3>
-                    <%-- Display actual low stock item count --%>
                     <div class="value"><%= lowStockCount %></div>
                     <div class="trend down">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                        <%-- Placeholder: Dynamically show change in low stock items --%>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         3 more than yesterday
                     </div>
                 </div>
-
                 <div class="stat-card">
                     <h3>TOP SELLING</h3>
-                    <%-- Placeholder: Dynamically display top selling product --%>
                     <div class="value">Cappuccino</div>
                     <div class="trend up">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="18 15 12 9 6 15"></polyline>
-                        </svg>
+                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                         18.3% increase in sales
                     </div>
                 </div>
-
                 <div class="stat-card">
                     <h3>PRODUCT CATEGORIES</h3>
-                    <%-- Display actual unique category count --%>
                     <div class="value"><%= uniqueCategoryCount %></div>
                     <div class="trend neutral">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                         No change
                     </div>
                 </div>
@@ -672,7 +702,7 @@
                             </svg>
                             Export
                         </button>
-                        <button class="icon-button" onclick="window.location.reload();"> <%-- Add refresh functionality --%>
+                        <button class="icon-button" onclick="window.location.reload();"> 
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="1 4 1 10 7 10"></polyline>
                                 <polyline points="23 20 23 14 17 14"></polyline>
@@ -683,16 +713,14 @@
                     </div>
                 </div>
                 <div class="module-content">
-                     <%-- Display error message if connection or retrieval failed --%>
-                     <% if (errorMessage != null) { %>
-                         <p class="error-message"><%= errorMessage %></p>
-                     <% } %>
+                    <%-- Display error message from JSP scriptlet if connection or retrieval failed --%>
+                    <% if (errorMessageJsp != null) { %>
+                        <p class="feedback-message error-message-jsp"><%= errorMessageJsp %></p>
+                    <% } %>
                     <table class="products-table">
                         <thead>
                             <tr>
-                                <th>
-                                    <input type="checkbox" class="select-all-checkbox">
-                                </th>
+                                <th><input type="checkbox" class="select-all-checkbox"></th>
                                 <th>Product</th>
                                 <th>SKU</th>
                                 <th>Category</th>
@@ -705,70 +733,61 @@
                         </thead>
                         <tbody>
                             <%
-                                // Check if productList is not null AND not empty before looping
                                 if (productList != null && !productList.isEmpty()) {
                                     for (Product product : productList) {
                             %>
                             <tr>
-                                <td>
-                                    <input type="checkbox" class="row-checkbox" value="<%= product.getId() %>"> <%-- Use product ID as value --%>
-                                </td>
+                                <td><input type="checkbox" class="row-checkbox" value="<%= product.getId() %>"></td>
                                 <td>
                                     <div class="product-info">
                                         <%
-                                            // Construct image URL using context path and stored path
-                                            String productImageUrl = request.getContextPath() + "/Images/default.jpg"; // Default image if needed
-                                            if (product.getImagePath() != null && !product.getImagePath().isEmpty()) {
-                                                // Assuming imagePath in DB is like "Images/your_image.jpg"
-                                                // Construct the full URL accessible from the browser
+                                            String productImageUrl = request.getContextPath() + "/Images/default.jpg"; 
+                                            if (product.getImagePath() != null && !product.getImagePath().isEmpty() && !product.getImagePath().endsWith("default.jpg")) {
                                                 productImageUrl = request.getContextPath() + "/" + product.getImagePath();
                                             }
                                         %>
                                         <img src="<%= productImageUrl %>" alt="<%= product.getName() %> Image" class="product-thumbnail">
                                         <div class="product-details">
                                             <span class="product-name"><%= product.getName() %></span>
-                                            <span class="product-id">#PROD-<%= product.getId() %></span> <%-- Use product ID --%>
+                                            <span class="product-id">#PROD-<%= product.getId() %></span>
                                         </div>
                                     </div>
                                 </td>
-                                <td><%= product.getSku() != null ? product.getSku() : "N/A" %></td> <%-- Display SKU --%>
-                                <td><%= product.getCategory() != null ? product.getCategory() : "N/A" %></td> <%-- Display Category --%>
-                                <td>Rs.<%= df.format(product.getPrice()) %></td> <%-- Display formatted Price --%>
+                                <td><%= product.getSku() != null ? product.getSku() : "N/A" %></td>
+                                <td><%= product.getCategory() != null ? product.getCategory() : "N/A" %></td>
+                                <td>Rs.<%= df.format(product.getPrice()) %></td>
                                 <td>
                                     <%
-                                        String stockClass = "low"; // Default to low
-                                        if (product.getStock() >= 50) { // Example thresholds: >= 50 is high
+                                        String stockClass = "low"; 
+                                        if (product.getStock() >= 50) { 
                                             stockClass = "high";
-                                        } else if (product.getStock() >= 10) { // >= 10 and < 50 is medium
+                                        } else if (product.getStock() >= 10) { 
                                             stockClass = "medium";
-                                        } // < 10 remains low
+                                        } 
                                     %>
-                                    <div class="stock-level <%= stockClass %>"><%= product.getStock() %> units</div> <%-- Display Stock --%>
+                                    <div class="stock-level <%= stockClass %>"><%= product.getStock() %> units</div>
                                 </td>
-                                <td><%= product.getSupplier() != null ? product.getSupplier() : "N/A" %></td> <%-- Display Supplier --%>
+                                <td><%= product.getSupplier() != null ? product.getSupplier() : "N/A" %></td>
                                 <td>
                                     <%
                                         String statusText = product.getStatus() != null ? product.getStatus() : "N/A";
-                                        String statusClass = "pending"; // Default style
+                                        String statusClass = "pending"; 
                                         if ("Active".equalsIgnoreCase(statusText)) {
-                                            statusClass = "completed"; // Green style for Active
-                                        } else if ("Inactive".equalsIgnoreCase(statusText)) { // Example for Inactive
-                                            statusClass = "pending"; // Yellow style for Inactive
+                                            statusClass = "completed"; 
+                                        } else if ("Inactive".equalsIgnoreCase(statusText)) { 
+                                            statusClass = "pending"; 
                                         }
-                                        // Note: Low stock is handled visually by the Stock column
                                     %>
-                                    <span class="status <%= statusClass %>"><%= statusText %></span> <%-- Display Status --%>
+                                    <span class="status <%= statusClass %>"><%= statusText %></span>
                                 </td>
                                 <td>
                                     <div class="row-actions">
-                                        <%-- Edit Button (Link to edit page with product ID) --%>
-                                        <button class="action-button edit" onclick="window.location.href='<%= request.getContextPath() %>/Admin/update_product.jsp?id=<%= product.getId() %>&oldImagePath=<%= product.getImagePath() %>'">
+                                        <button class="action-button edit" onclick="window.location.href='<%= request.getContextPath() %>/Admin/update_product.jsp?id=<%= product.getId() %>&oldImagePath=<%= product.getImagePath() != null ? product.getImagePath() : "" %>' ">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                             </svg>
                                         </button>
-                                        <%-- Delete Button (Trigger delete action via form) --%>
                                         <button class="action-button delete" onclick="confirmDelete(<%= product.getId() %>)">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -780,7 +799,7 @@
                             </tr>
                             <%
                                     }
-                                } else if (errorMessage == null) { // Only show "No products found" if there was no DB error
+                                } else if (errorMessageJsp == null) { // Only show "No products found" if there was no DB error earlier
                             %>
                             <tr>
                                 <td colspan="9" style="text-align: center; padding: 20px;">No products found.</td>
@@ -791,88 +810,59 @@
                         </tbody>
                     </table>
 
-                    <%-- Basic Delete Form (Hidden) --%>
-                    <%-- This form will be dynamically populated and submitted by the confirmDelete JS function --%>
                     <form id="deleteForm" action="<%= request.getContextPath() %>/deleteProduct" method="POST" style="display: none;">
                         <input type="hidden" name="productId" id="productIdToDelete">
                     </form>
-
                 </div>
             </div>
 
-            <%-- Enhanced Pagination with Dynamic Page Links --%>
             <div class="pagination">
-                <%-- Displaying info based on actual paginated data --%>
                 <div class="pagination-info">Showing <%= displayedItemsStart %> to <%= displayedItemsEnd %> of <%= totalProducts %> entries</div>
                 <div class="pagination-controls">
-                    <%-- Previous button - disabled on first page --%>
                     <a href="<%= currentPage > 1 ? request.getContextPath() + "/Admin/products.jsp?page=" + (currentPage - 1) : "#" %>"
                        style="text-decoration: none; color: inherit;"
                        class="pagination-button <%= currentPage == 1 ? "disabled" : "" %>"
                        <%= currentPage == 1 ? "onclick='return false;'" : "" %>>
-                       Previous
+                        Previous
                     </a>
                     
-                    <%-- First page is always shown --%>
-                    <a href="<%= request.getContextPath() %>/Admin/products.jsp?page=1"
-                       style="text-decoration: none; color: inherit;"
-                       class="pagination-button <%= currentPage == 1 ? "active" : "" %>">1</a>
-                    
-                    <%-- If there are many pages, add ellipsis and control which page numbers to show --%>
                     <% 
-                        // Maximum number of page links to show (excluding first, last, ellipses)
                         int maxVisiblePages = 3; 
-                        
-                        // Determine the range of pages to display
-                        int startPage = Math.max(2, currentPage - 1);
-                        int endPage = Math.min(totalPages - 1, currentPage + 1);
-                        
-                        // Adjust to ensure we show up to maxVisiblePages
-                        if (endPage - startPage + 1 < maxVisiblePages) {
-                            // If we're showing fewer than maxVisiblePages, try to show more
-                            if (startPage == 2) {
-                                // We're near the beginning, so extend to the right
-                                endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 1);
-                            } else if (endPage == totalPages - 1) {
-                                // We're near the end, so extend to the left
-                                startPage = Math.max(2, endPage - maxVisiblePages + 1);
-                            }
+                        int startPage = Math.max(1, currentPage - 1); // Ensure startPage is at least 1
+                        int endPage = Math.min(totalPages, currentPage + 1);
+
+                        if (currentPage <=2) { // If current page is 1 or 2, start from 1
+                           startPage = 1;
+                           endPage = Math.min(totalPages, maxVisiblePages);
+                        } else if (currentPage >= totalPages -1 && totalPages > maxVisiblePages) { // If current page is last or second last
+                           startPage = Math.max(1, totalPages - maxVisiblePages + 1);
+                           endPage = totalPages;
+                        } else { // For pages in the middle
+                            startPage = currentPage -1;
+                            endPage = currentPage +1;
                         }
-                        
-                        // Show ellipsis before startPage if needed
-                        if (startPage > 2) {
-                    %>
-                        <span class="pagination-ellipsis">...</span>
-                    <% } 
-                       
-                       // Display the calculated range of page numbers
-                       for (int i = startPage; i <= endPage; i++) {
+
+
+                        if (startPage > 1) { %>
+                            <a href="<%= request.getContextPath() %>/Admin/products.jsp?page=1" style="text-decoration: none; color: inherit;" class="pagination-button <%= currentPage == 1 ? "active" : "" %>">1</a>
+                            <% if (startPage > 2) { %><span class="pagination-ellipsis">...</span><% } %>
+                    <%  }
+                        for (int i = startPage; i <= endPage; i++) {
                     %>
                         <a href="<%= request.getContextPath() %>/Admin/products.jsp?page=<%= i %>"
                            style="text-decoration: none; color: inherit;"
                            class="pagination-button <%= currentPage == i ? "active" : "" %>"><%= i %></a>
-                    <% } 
-                       
-                       // Show ellipsis after endPage if needed
-                       if (endPage < totalPages - 1 && totalPages > 2) {
-                    %>
-                        <span class="pagination-ellipsis">...</span>
-                    <% } 
-                       
-                       // Always show last page if there's more than one page
-                       if (totalPages > 1) {
-                    %>
-                        <a href="<%= request.getContextPath() %>/Admin/products.jsp?page=<%= totalPages %>"
-                           style="text-decoration: none; color: inherit;"
-                           class="pagination-button <%= currentPage == totalPages ? "active" : "" %>"><%= totalPages %></a>
-                    <% } %>
+                    <%  } 
+                        if (endPage < totalPages) {
+                            if (endPage < totalPages -1) { %><span class="pagination-ellipsis">...</span><% } %>
+                            <a href="<%= request.getContextPath() %>/Admin/products.jsp?page=<%= totalPages %>" style="text-decoration: none; color: inherit;" class="pagination-button <%= currentPage == totalPages ? "active" : "" %>"><%= totalPages %></a>
+                    <%  } %>
                     
-                    <%-- Next button - disabled on last page --%>
                     <a href="<%= currentPage < totalPages ? request.getContextPath() + "/Admin/products.jsp?page=" + (currentPage + 1) : "#" %>" 
                        style="text-decoration: none; color: inherit;"
                        class="pagination-button <%= currentPage >= totalPages ? "disabled" : "" %>"
                        <%= currentPage >= totalPages ? "onclick='return false;'" : "" %>>
-                       Next
+                        Next
                     </a>
                 </div>
             </div>
@@ -884,7 +874,6 @@
     </div>
 
     <script>
-        // JavaScript for mobile sidebar toggle (from your initial HTML)
         const mobileNavToggle = document.getElementById('mobileNavToggle');
         const sidebar = document.getElementById('sidebar');
 
@@ -894,47 +883,68 @@
             });
         }
 
-        // JavaScript for delete confirmation
         function confirmDelete(productId) {
             if (confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
-                // Populate the hidden form and submit it
                 document.getElementById('productIdToDelete').value = productId;
                 document.getElementById('deleteForm').submit();
             }
         }
 
-        // Add search functionality
         document.getElementById('searchButton').addEventListener('click', function() {
             const searchQuery = document.getElementById('searchInput').value.trim();
+            // This is a basic search implementation. For full filter integration,
+            // you'd need to gather all filter values and construct the URL.
+            // For now, search will reset other filters unless they are also included in the URL construction.
             if (searchQuery) {
-                // You can enhance this to maintain other parameters like current filters
                 window.location.href = '${pageContext.request.contextPath}/Admin/products.jsp?search=' + encodeURIComponent(searchQuery) + '&page=1';
+            } else {
+                 window.location.href = '${pageContext.request.contextPath}/Admin/products.jsp?page=1'; // Go to page 1 if search is empty
             }
         });
         
-        // Add event listener for Enter key in search input
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 document.getElementById('searchButton').click();
             }
         });
         
-        // Add filter change event handlers (basic implementation)
-        const filters = ['categoryFilter', 'supplierFilter', 'stockFilter'];
-        filters.forEach(filterId => {
-            document.getElementById(filterId).addEventListener('change', function() {
-                // This is a simplified version. For a real implementation,
-                // you would collect all filter values and build a query string
-                const filterValue = this.value;
-                if (filterValue) {
-                    // Again, you can enhance this to maintain other parameters
-                    window.location.href = '${pageContext.request.contextPath}/Admin/products.jsp?filter=' + 
-                                         encodeURIComponent(filterId) + 
-                                         '&value=' + encodeURIComponent(filterValue) + 
-                                         '&page=1';
+        // Basic filter change handling (can be expanded)
+        const filterSelects = ['categoryFilter', 'supplierFilter', 'stockFilter'];
+        filterSelects.forEach(filterId => {
+            const selectElement = document.getElementById(filterId);
+            if (selectElement) {
+                selectElement.addEventListener('change', function() {
+                    // This is a simplified version. For a real implementation,
+                    // you would collect ALL current filter values and the search query
+                    // to build a complete query string for the server.
+                    // For now, applying one filter might reset others unless explicitly handled.
+                    let params = new URLSearchParams(window.location.search);
+                    params.set(filterId, this.value);
+                    params.set('page', '1'); // Reset to page 1 on filter change
+                    // To clear a filter if "All X" is selected
+                    if (!this.value) {
+                        params.delete(filterId);
+                    }
+                    window.location.href = '${pageContext.request.contextPath}/Admin/products.jsp?' + params.toString();
+                });
+            }
+        });
+
+         // Preserve filter values on page load
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            filterSelects.forEach(filterId => {
+                const selectElement = document.getElementById(filterId);
+                if (selectElement && urlParams.has(filterId)) {
+                    selectElement.value = urlParams.get(filterId);
                 }
             });
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput && urlParams.has('search')) {
+                searchInput.value = urlParams.get('search');
+            }
         });
+
     </script>
 </body>
 </html>

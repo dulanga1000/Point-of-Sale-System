@@ -103,4 +103,8 @@ public class Supplier {
     public String toString() {
         return "Supplier{companyName='" + companyName + "', contactPerson='" + contactPerson + "'}";
     }
+
+    public void setSupplierStatus(String supplierStatus) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }

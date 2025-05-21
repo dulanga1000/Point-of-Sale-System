@@ -322,6 +322,9 @@
               </div>
               <!-- Hidden input for adjustment type -->
               <input type="hidden" name="adjustmentType" id="adjustmentTypeInput" value="increase">
+              
+              <!-- Hidden input for auto-generated reference number -->
+              <input type="hidden" name="reference" id="reference">
             </div>
 
             <div class="form-group">
@@ -343,11 +346,6 @@
                 <option value="Return to Supplier">Return to Supplier</option>
                 <option value="Other Adjustment">Other Adjustment</option>
               </select>
-            </div>
-            
-            <div class="form-group">
-              <label for="reference">Reference Number:</label>
-              <input type="text" id="reference" name="reference" class="form-control" value="" readonly>
             </div>
             
             <div class="form-group form-grid-full">
@@ -497,6 +495,7 @@
     const quantityStockDisplay = document.getElementById('quantityStockDisplay');
     const increaseBtn = document.getElementById('increaseBtn');
     const decreaseBtn = document.getElementById('decreaseBtn');
+    const referenceInput = document.getElementById('reference');
 
     // Current adjustment type (default: increase)
     let currentAdjustmentType = 'increase';
@@ -518,45 +517,21 @@
             increaseBtn.classList.remove('active');
         }
 
-        // Update reference number based on type
-        updateReferenceNumber();
+        // Update reference number
+        generateReference();
 
         // Update projected stock display
         updateProjectedStock();
     }
 
     /**
-     * Generates a unique reference number for the stock adjustment.
-     * Format: PREFIX-YYMMDDHHMMSS-RANDOMXX
-     * @returns {string} The generated reference number.
+     * Generates a completely random reference number.
+     * Format: ADJ-RANDOMXXXX (where XXXX is a 4-digit random number)
      */
-    function generateReferenceNumber() {
-        const prefix = currentAdjustmentType === 'increase' ? 'AIN' : 'ADC'; // AIN for increase, ADC for decrease
-        const date = new Date();
-        const timestamp = date.getFullYear().toString().slice(-2) +
-                          padNumber(date.getMonth() + 1) +
-                          padNumber(date.getDate()) +
-                          padNumber(date.getHours()) +
-                          padNumber(date.getMinutes()) +
-                          padNumber(date.getSeconds());
-        const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-        return `${prefix}-${timestamp}-${random}`;
-    }
-
-    /**
-     * Helper function to pad a number with a leading zero if it's less than 10.
-     * @param {number} num - The number to pad.
-     * @returns {string} The padded number as a string.
-     */
-    function padNumber(num) {
-        return num.toString().padStart(2, '0');
-    }
-
-    /**
-     * Updates the 'Reference Number' input field with a newly generated reference number.
-     */
-    function updateReferenceNumber() {
-        document.getElementById('reference').value = generateReferenceNumber();
+    function generateReference() {
+        // Generate a random 8-digit number
+        const random = Math.floor(10000000 + Math.random() * 90000000);
+        referenceInput.value = "ADJ-" + random;
     }
 
     /**
@@ -590,7 +565,7 @@
     });
 
     // Initialize the page state when loaded
-    updateReferenceNumber();          // Generate initial reference number
+    generateReference();          // Generate initial reference number
     quantityStockDisplay.style.display = 'none'; // Hide stock display initially
 
     // Add event listener for quantity changes
@@ -672,6 +647,9 @@
                 return;
             }
         }
+        
+        // Generate a new reference number before submitting
+        generateReference();
     });
   </script>
 </body>

@@ -1,6 +1,6 @@
 <%-- 
     Document   : cashier_dashboard
-    Created on : May 16, 2025, 9:29:20 AM
+    Created on : May 16, 2025, 9:29:20 AM
     Author     : dulan
 --%>
 
@@ -12,6 +12,10 @@
 <%@ page import="util.DBConnection" %>
 <%@ page import="java.sql.Connection" %>
 <%@ page import="java.sql.SQLException" %>
+<%@ page import="java.sql.*" %>
+<%@ page import="java.util.*" %>
+<%@ page import="java.time.LocalTime" %>
+<%@ page import="java.time.format.DateTimeFormatter" %>
 
 <%
     List<Product> productList = new ArrayList<>();
@@ -76,7 +80,7 @@
                 <h2>Swift</h2>
             </div>
 
-  <jsp:include page="menu.jsp" />
+            <jsp:include page="menu.jsp" />
         </div>
 
         <div class="main-content">
@@ -84,38 +88,77 @@
                 <h1 class="page-title">Cashier Dashboard</h1>
                 <div class="user-profile">
                     <div class="user-image">
-                        <img src="<%= request.getContextPath() %>/Images/logo.png" alt="User avatar"> <%-- Use context path, consider dynamic user image --%>
+                        <img src="<%= request.getContextPath() %>/Images/logo.png" alt="User avatar"> <%-- Default image --%>
                     </div>
                     <div class="user-info">
-                        <h4>John Doe</h4> <%-- Consider replacing with dynamic user data --%>
-                        <p>Cashier</p>
+                        <%
+                        Connection userConn = null;
+                        String URL = "jdbc:mysql://localhost:3306/Swift_Database";
+                        String USER = "root";
+                        String PASSWORD = "";
+
+                        try {
+                            Class.forName("com.mysql.jdbc.Driver"); // Load the driver explicitly
+                            userConn = DriverManager.getConnection(URL, USER, PASSWORD);
+                            PreparedStatement sql = userConn.prepareStatement("SELECT * FROM users WHERE role = 'Cashier' LIMIT 1");
+                            ResultSet result = sql.executeQuery();
+
+                            if (result.next()) { 
+                                String profileImagePath = result.getString("profile_image_path");
+                                if (profileImagePath != null && !profileImagePath.trim().isEmpty()) {
+                        %>
+                                    <h4><%= result.getString("first_name") %></h4>
+                        <%
+                                } else {
+                        %>
+                                    <h4><%= result.getString("first_name") %></h4>
+                        <%
+                                }
+                            }
+                            result.close();
+                            sql.close();
+                        } catch (Exception ex) {
+                            out.println("<p style='color: red;'>Error: " + ex.getMessage() + "</p>");
+                            System.err.println("User data error: " + ex.getMessage());
+                            ex.printStackTrace();
+                        } finally {
+                            if (userConn != null) {
+                                try {
+                                    userConn.close();
+                                } catch (SQLException e) {
+                                    // Log the error but continue
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                        %>
                     </div>
                 </div>
             </div>
 
             <div class="quick-actions">
-            <a href="cashier_dashboard.jsp" class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-plus-circle" style="color: var(--success);"></i>
-                </div>
-                <h3 class="action-title">New Sale</h3>
-                <p class="action-description">Start a new transaction</p>
-            </a>
-            <a href="Cashier_report.jsp" class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-history" style="color: var(--primary);"></i>
-                </div>
-                <h3 class="action-title">Recent Sales</h3>
-                <p class="action-description">View recent transactions</p>
-            </a>
-            <a href="products.jsp" class="action-card">
-                <div class="action-icon">
-                    <i class="fas fa-search" style="color: var(--secondary);"></i>
-                </div>
-                <h3 class="action-title">Stock Check</h3>
-                <p class="action-description">View available products</p>
-            </a>
-        </div>
+                <a href="cashier_dashboard.jsp" class="action-card" style=" text-decoration: none; color: #333; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                    <div class="action-icon">
+                        <i class="fas fa-plus-circle" style="color: var(--success);"></i>
+                    </div>
+                    <h3 class="action-title">New Sale</h3>
+                    <p class="action-description">Start a new transaction</p>
+                </a>
+                <a href="Cashier_report.jsp" class="action-card" style=" text-decoration: none; color: #333; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                    <div class="action-icon">
+                        <i class="fas fa-history" style="color: var(--primary);"></i>
+                    </div>
+                    <h3 class="action-title">Recent Sales</h3>
+                    <p class="action-description">View recent transactions</p>
+                </a>
+                <a href="products.jsp" class="action-card" style=" text-decoration: none; color: #333; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                    <div class="action-icon">
+                        <i class="fas fa-search" style="color: var(--secondary);"></i>
+                    </div>
+                    <h3 class="action-title">Stock Check</h3>
+                    <p class="action-description">View available products</p>
+                </a>
+            </div>
 
             <div class="modules-container">
                 <div class="module-card"> <%-- Product Module --%>
@@ -311,7 +354,7 @@
                         <label for="cashAmount">Cash Received</label>
                         <div class="input-with-icon">
                             <span class="currency-symbol">Rs.</span>
-                            <input type="number" id="cashAmount" placeholder="Enter amount" min="0" step="0.01">
+                            <input type="number" id="cashAmount" placeholder=" Enter amount" min="0" step="0.01">
                         </div>
                     </div>
                     <div class="form-group">

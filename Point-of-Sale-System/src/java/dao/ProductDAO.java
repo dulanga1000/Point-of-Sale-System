@@ -50,10 +50,10 @@ public class ProductDAO {
             stmt.setString(7, product.getImagePath());
             stmt.setString(8, product.getStatus());
             return stmt.executeUpdate() > 0;
-        } catch (SQLException e) { 
+        } catch (SQLException e) {
             System.err.println("SQL Error adding product: " + e.getMessage());
             e.printStackTrace();
-        } catch (Exception e) { 
+        } catch (Exception e) {
              System.err.println("Error adding product: " + e.getMessage());
             e.printStackTrace();
         }
@@ -99,11 +99,11 @@ public class ProductDAO {
     public List<Product> searchProducts(String query) {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM products WHERE LOWER(name) LIKE LOWER(?) OR LOWER(sku) LIKE LOWER(?) ORDER BY name ASC";
-        String searchTerm = "%" + query.trim() + "%"; 
+        String searchTerm = "%" + query.trim() + "%";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, searchTerm); 
-            stmt.setString(2, searchTerm); 
+            stmt.setString(1, searchTerm);
+            stmt.setString(2, searchTerm);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     products.add(mapRowToProduct(rs));
@@ -123,7 +123,7 @@ public class ProductDAO {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM products WHERE category = ? ORDER BY name ASC";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, category); 
+            stmt.setString(1, category);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     products.add(mapRowToProduct(rs));
@@ -141,10 +141,10 @@ public class ProductDAO {
 
     public List<Product> getProductsByPage(int itemsPerPage, int offset) {
         List<Product> products = new ArrayList<>();
-        String sql = "SELECT * FROM products ORDER BY name ASC LIMIT ? OFFSET ?"; 
+        String sql = "SELECT * FROM products ORDER BY name ASC LIMIT ? OFFSET ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, itemsPerPage); 
-            stmt.setInt(2, offset);       
+            stmt.setInt(1, itemsPerPage);
+            stmt.setInt(2, offset);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     products.add(mapRowToProduct(rs));
@@ -166,7 +166,7 @@ public class ProductDAO {
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
-                count = rs.getInt(1); 
+                count = rs.getInt(1);
             }
         } catch (SQLException e) {
             System.err.println("SQL Error getting total product count: " + e.getMessage());
@@ -179,7 +179,7 @@ public class ProductDAO {
     }
 
     public int getLowStockCount(int threshold) {
-        String sql = "SELECT COUNT(*) FROM products WHERE stock <= ?"; 
+        String sql = "SELECT COUNT(*) FROM products WHERE stock <= ?";
         int count = 0;
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, threshold);
@@ -236,19 +236,20 @@ public class ProductDAO {
     }
 
     public boolean deleteProduct(int id) {
-        String sql = "DELETE FROM products WHERE id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("SQL Error deleting product: " + e.getMessage());
-            e.printStackTrace();
-        } catch (Exception e) {
-            System.err.println("Error deleting product: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return false;
+    String sql = "DELETE FROM products WHERE id = ?";
+    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setInt(1, id);
+        return stmt.executeUpdate() > 0; // Returns true if 1 or more rows affected, false otherwise (including if ID not found)
+    } catch (SQLException e) {
+        // This block executes if there's a database-related error (e.g., constraint violation)
+        System.err.println("SQL Error deleting product: " + e.getMessage());
+        e.printStackTrace(); // THIS IS VERY IMPORTANT FOR DEBUGGING - CHECK YOUR SERVER CONSOLE
+    } catch (Exception e) { // Catches any other unexpected errors during the DAO operation
+        System.err.println("Error deleting product: " + e.getMessage());
+        e.printStackTrace();
     }
+    return false; // Returns false if any exception occurred
+}
 
     public boolean updateProduct(Product product) {
         String sql = "UPDATE products SET name=?, category=?, price=?, sku=?, stock=?, supplier=?, image_path=?, status=? WHERE id=?";
@@ -288,17 +289,17 @@ public class ProductDAO {
             stmt.setInt(1, quantityDecreased);
             stmt.setInt(2, productId);
             stmt.setInt(3, quantityDecreased); // Condition: current stock must be >= quantityDecreased
-            
+
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
                 System.out.println("Stock updated for product ID " + productId + ". Decreased by " + quantityDecreased);
                 return true;
             } else {
                 // This can happen if product ID is not found, or if stock < quantityDecreased
-                Product currentProduct = getProductById(productId);
+                Product currentProduct = getProductById(productId); // This call uses the same 'conn'
                 int currentStock = (currentProduct != null) ? currentProduct.getStock() : -1;
-                System.err.println("Stock update failed for product ID " + productId + 
-                                   ". Product not found, or insufficient stock (requested: " + quantityDecreased + 
+                System.err.println("Stock update failed for product ID " + productId +
+                                   ". Product not found, or insufficient stock (requested: " + quantityDecreased +
                                    ", available: " + currentStock + ").");
                 return false;
             }

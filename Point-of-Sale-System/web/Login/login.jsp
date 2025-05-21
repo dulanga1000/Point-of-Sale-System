@@ -66,16 +66,11 @@
 
             <div class="form-group">
                 <label for="password" class="form-label">Password</label>
-                <%-- Added name attribute --%>
                 <input type="password" id="password" name="password" class="form-input" required>
             </div>
-            <%-- Changed to type="submit" --%>
             <button type="submit" class="login-button">Log in</button>
             <div class="login-info">
-                Login as Admin, Cashier, or Supplier
-            </div>
-            <div class="forgot-info">
-                <a href="#">Forgot Password?</a> <%-- Implement this separately --%>
+                Login as Admin or Cashier
             </div>
         </form>
     </div>
