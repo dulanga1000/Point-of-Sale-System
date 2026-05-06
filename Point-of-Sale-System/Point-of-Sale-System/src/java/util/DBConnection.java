@@ -14,7 +14,7 @@ public class DBConnection {
     private static final String URL = "jdbc:mysql://localhost:3306/swift_database?useSSL=false&serverTimezone=UTC";
     // IMPORTANT: Replace with your actual database credentials
     private static final String USER = "root"; // Your DB Username
-    private static final String PASSWORD = "root";   // Your DB Password
+    private static final String PASSWORD = "";   // Your DB Password
 
     static {
         try {
